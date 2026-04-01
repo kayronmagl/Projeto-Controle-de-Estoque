@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Controle de Estoque | Tobia's Lanches</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./script.js" defer></script>
+  </head>
+  <body>
+    <section id="authShell" class="auth-shell">
+      <div class="auth-card">
+        <div class="auth-brand">
+          <div class="brand-mark auth-brand-mark" aria-hidden="true">TL</div>
+
+          <div>
+            <p class="eyebrow">Acesso restrito</p>
+            <h1 class="auth-title">Controle de estoque</h1>
+            <p class="auth-text">
+              Entre com o seu usuario ja cadastrado!
+            </p>
+          </div>
+        </div>
+
+        <div class="auth-summary">
+          <span class="meta-pill">Email e senha</span>
+          <span class="meta-pill">Supabase Auth</span>
+          <span class="meta-pill">Acesso privado</span>
+        </div>
+
+        <form id="authForm" class="auth-form">
+          <div class="form-field">
+            <label for="authEmail">Email</label>
+            <input
+              id="authEmail"
+              name="email"
+              type="email"
+              autocomplete="email"
+              placeholder="voce@empresa.com"
+              required
+            />
+          </div>
+
+          <div class="form-field">
+            <label for="authPassword">Senha</label>
+            <input
+              id="authPassword"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              placeholder="Digite sua senha"
+              required
+            />
+          </div>
+
+          <button id="authSubmitButton" class="auth-submit" type="submit">
+            Entrar no controle
+          </button>
+        </form>
+
+        <p id="authNotice" class="auth-notice" hidden></p>
+      </div>
+    </section>
+
+    <div id="appShell" class="app-shell" hidden>
+      <header class="hero-card">
+        <div class="brand-row">
+          <div class="brand-mark" aria-hidden="true">TL</div>
+
+          <div class="brand-copy">
+            <p class="eyebrow">Controle de</p>
+            <h1>Tobia's Lanches</h1>
+            <p class="hero-location">Quiosque 03 | Iracema-CE</p>
+            <p class="hero-text">
+              Controle rapido de produtos, reposicao e historico em uma interface
+              inspirada no cardapio do quiosque.
+            </p>
+          </div>
+
+          <div class="hero-actions">
+            <div class="session-chip" id="currentUserChip" hidden></div>
+            <button id="refreshButton" class="ghost-button" type="button">
+              Atualizar
+            </button>
+            <button id="signOutButton" class="ghost-button ghost-button-danger" type="button">
+              Sair
+            </button>
+          </div>
+        </div>
+
+        <div class="hero-meta">
+          <span class="meta-pill">Tema escuro</span>
+          <span class="meta-pill">Atualizacao imediata</span>
+          <span class="meta-pill">Historico ativo</span>
+          <span class="meta-pill">Mobile first</span>
+        </div>
+
+        <div class="hero-highlights" aria-label="Destaques operacionais">
+          <article class="hero-highlight">
+            <span class="hero-highlight-label">Fluxo</span>
+            <strong>Reposicao sem friccao</strong>
+            <p>Entrada e saida no mesmo painel, sem trocar de tela.</p>
+          </article>
+
+          <article class="hero-highlight">
+            <span class="hero-highlight-label">Leitura</span>
+            <strong>Alertas bem visiveis</strong>
+            <p>Itens baixos e criticos aparecem antes de virarem problema.</p>
+          </article>
+
+          <article class="hero-highlight">
+            <span class="hero-highlight-label">Base</span>
+            <strong>Supabase conectado</strong>
+            <p>Produtos e movimentacoes centralizados para demonstracao e operacao.</p>
+          </article>
+        </div>
+      </header>
+
+      <nav class="view-switcher" aria-label="Alternar visualizacao">
+        <button
+          class="view-button is-active"
+          id="productsTab"
+          type="button"
+          data-view="products"
+        >
+          Estoque
+        </button>
+        <button
+          class="view-button"
+          id="historyTab"
+          type="button"
+          data-view="history"
+        >
+          Historico
+        </button>
+      </nav>
+
+      <div id="noticeBar" class="notice-bar" hidden></div>
+
+      <main class="content-stack">
+        <section id="productsView" class="panel is-active" aria-labelledby="productsTitle">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Lista principal</p>
+              <h2 id="productsTitle">Produtos</h2>
+            </div>
+
+            <div class="metrics-grid" aria-label="Resumo do estoque">
+              <article class="metric-card">
+                <span class="metric-label">Total</span>
+                <strong class="metric-value" id="metricTotal">0</strong>
+              </article>
+
+              <article class="metric-card">
+                <span class="metric-label">OK</span>
+                <strong class="metric-value metric-ok" id="metricOk">0</strong>
+              </article>
+
+              <article class="metric-card">
+                <span class="metric-label">Baixo</span>
+                <strong class="metric-value metric-low" id="metricLow">0</strong>
+              </article>
+
+              <article class="metric-card">
+                <span class="metric-label">Critico</span>
+                <strong class="metric-value metric-critical" id="metricCritical">0</strong>
+              </article>
+            </div>
+          </div>
+
+          <div class="utility-grid">
+            <section class="alerts-panel" aria-labelledby="alertsTitle">
+              <div class="alerts-head">
+                <div>
+                  <p class="eyebrow">Reposicao</p>
+                  <h3 id="alertsTitle">Alertas de mercadoria</h3>
+                </div>
+              </div>
+
+              <div id="alertsEmptyState" class="state-card state-card-compact" hidden></div>
+              <div id="alertsList" class="alerts-list" aria-live="polite"></div>
+            </section>
+
+            <section class="create-panel" aria-labelledby="createTitle">
+              <div class="create-head">
+                <div>
+                  <p class="eyebrow">Cadastro rapido</p>
+                  <h3 id="createTitle">Novo insumo</h3>
+                </div>
+              </div>
+
+              <p id="accessModeNote" class="panel-note" hidden></p>
+
+              <form id="createProductForm" class="create-form">
+                <div class="form-field form-field-wide">
+                  <label for="productName">Nome do item</label>
+                  <input
+                    id="productName"
+                    name="name"
+                    type="text"
+                    maxlength="80"
+                    placeholder="Ex.: Requeijao, Refrigerante lata, Copo 300ml"
+                    required
+                  />
+                </div>
+
+                <div class="form-field">
+                  <label for="productQuantity">Quantidade inicial</label>
+                  <input
+                    id="productQuantity"
+                    name="quantity"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value="0"
+                    required
+                  />
+                </div>
+
+                <div class="form-field">
+                  <label for="productMinimum">Minimo ideal</label>
+                  <input
+                    id="productMinimum"
+                    name="min_quantity"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value="5"
+                    required
+                  />
+                </div>
+
+                <button id="createProductButton" class="ghost-button create-button" type="submit">
+                  Adicionar item
+                </button>
+              </form>
+            </section>
+          </div>
+
+          <div id="productsEmptyState" class="state-card" hidden></div>
+          <div id="productList" class="card-list" aria-live="polite"></div>
+        </section>
+
+        <section id="historyView" class="panel" aria-labelledby="historyTitle">
+          <div class="section-head history-head">
+            <div>
+              <p class="eyebrow">Movimentacoes</p>
+              <h2 id="historyTitle">Historico</h2>
+            </div>
+          </div>
+
+          <div id="historyEmptyState" class="state-card" hidden></div>
+          <div id="historyList" class="history-list" aria-live="polite"></div>
+        </section>
+      </main>
+    </div>
+
+    <template id="productCardTemplate">
+      <article class="product-card">
+        <div class="product-copy">
+          <div class="product-copy-main">
+            <h3 class="product-name"></h3>
+            <p class="product-meta">
+              Minimo ideal: <span class="product-min"></span>
+            </p>
+          </div>
+
+          <div class="quantity-block">
+            <span class="quantity-label">Quantidade</span>
+            <strong class="quantity-value"></strong>
+          </div>
+        </div>
+
+        <div class="product-footer">
+          <span class="status-badge"></span>
+
+          <div class="action-group" aria-label="Ajustar quantidade">
+            <button
+              class="action-button"
+              type="button"
+              data-action="decrease"
+              aria-label="Remover uma unidade"
+            >
+              -
+            </button>
+            <button
+              class="action-button action-button-add"
+              type="button"
+              data-action="increase"
+              aria-label="Adicionar uma unidade"
+            >
+              +
+            </button>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <template id="historyCardTemplate">
+      <article class="history-card">
+        <div class="history-copy">
+          <h3 class="history-product"></h3>
+          <p class="history-summary"></p>
+          <p class="history-date"></p>
+        </div>
+
+        <div class="history-meta">
+          <span class="history-type"></span>
+          <strong class="history-quantity"></strong>
+        </div>
+      </article>
+    </template>
+  </body>
+</html>
