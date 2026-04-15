@@ -17,245 +17,247 @@
 </head>
 
 <body>
-  <section id="authShell" class="auth-shell">
-    <div class="auth-card">
-      <div class="auth-brand">
-        <div class="brand-mark auth-brand-mark">
-          <img class="brand-logo" src="./img/Logo_do_T.lanches.png" alt="Logo do Tobias Lanches" />
+  <section id="telaLogin" class="tela-login">
+    <div class="card-login">
+      <div class="marca-login">
+        <div class="selo-marca marca-login-selo">
+          <img class="logo-marca" src="./img/Logo_do_T.lanches.png" alt="Logo do Tobias Lanches" />
         </div>
 
         <div>
           <p class="eyebrow">Acesso restrito</p>
-          <h1 class="auth-title">Controle de estoque</h1>
-          <p class="auth-text">
+          <h1 class="titulo-login">Controle de estoque</h1>
+          <p class="texto-login">
             Entre com seu usuario cadastrado para acompanhar estoque, bebidas e movimentacoes em um painel direto e rapido.
           </p>
         </div>
       </div>
 
-      <div class="auth-summary">
-        <span class="meta-pill">
+      <div class="resumo-login">
+        <span class="pilula-meta">
           <strong>Login direto</strong>
           <small>Email e senha</small>
         </span>
-        <span class="meta-pill">
+        <span class="pilula-meta">
           <strong>Base segura</strong>
           <small>Supabase Auth</small>
         </span>
-        <span class="meta-pill">
+        <span class="pilula-meta">
           <strong>Acesso privado</strong>
           <small>Painel interno</small>
         </span>
       </div>
 
-      <form id="authForm" class="auth-form">
-        <div class="form-field">
+      <form id="formLogin" class="form-login">
+        <div class="campo-formulario">
           <label for="authEmail">Email</label>
           <input id="authEmail" name="email" type="email" autocomplete="email" placeholder="voce@empresa.com"
             required />
         </div>
 
-        <div class="form-field">
+        <div class="campo-formulario">
           <label for="authPassword">Senha</label>
           <input id="authPassword" name="password" type="password" autocomplete="current-password"
             placeholder="Digite sua senha" required />
         </div>
 
-        <button id="authSubmitButton" class="auth-submit" type="submit">
+        <button id="botaoEntrar" class="botao-entrar" type="submit">
           Entrar no controle
         </button>
       </form>
 
-      <div class="auth-support" aria-label="Resumo operacional">
-        <article class="auth-support-card">
-          <span class="auth-support-label">Estoque</span>
+      <div class="apoio-login" aria-label="Resumo operacional">
+        <article class="card-apoio-login">
+          <span class="rotulo-apoio-login">Estoque</span>
           <strong>Ingredientes e bebidas em um unico painel</strong>
         </article>
 
-        <article class="auth-support-card">
-          <span class="auth-support-label">Operacao</span>
+        <article class="card-apoio-login">
+          <span class="rotulo-apoio-login">Operacao</span>
           <strong>Entrada e saida com leitura imediata</strong>
         </article>
 
-        <article class="auth-support-card">
-          <span class="auth-support-label">Historico</span>
+        <article class="card-apoio-login">
+          <span class="rotulo-apoio-login">Historico</span>
           <strong>Ultimas movimentacoes sempre visiveis</strong>
         </article>
       </div>
 
-      <p id="authNotice" class="auth-notice" hidden></p>
+      <p id="avisoLogin" class="aviso-login" role="status" aria-live="polite" aria-atomic="true" hidden></p>
     </div>
   </section>
 
-  <div id="appShell" class="app-shell" hidden>
-    <header class="hero-card">
-      <div class="brand-row">
-        <div class="brand-mark">
-          <img class="brand-logo" src="./img/Logo_do_T.lanches.png" alt="Logo do Tobias Lanches" />
+  <div id="aplicacao" class="app-shell" hidden>
+    <header class="card-hero">
+      <div class="linha-marca">
+        <div class="selo-marca">
+          <img class="logo-marca" src="./img/Logo_do_T.lanches.png" alt="Logo do Tobias Lanches" />
         </div>
 
-        <div class="brand-copy">
+        <div class="texto-marca">
           <p class="eyebrow">Controle operacional</p>
           <h1>Tobias Lanches</h1>
-          <p class="hero-location">Quiosque 03 | Iracema-CE</p>
-          <p class="hero-text">
+          <p class="local-hero">Quiosque 03 | Iracema-CE</p>
+          <p class="texto-hero">
             Estoque, bebidas e reposicao em um painel unico, com leitura rapida, acoes simples e visual alinhado com a marca do quiosque.
           </p>
         </div>
 
-        <div class="hero-actions">
-          <div class="session-chip" id="currentUserChip" hidden></div>
-          <button id="refreshButton" class="ghost-button" type="button">
+        <div class="acoes-hero">
+          <div class="chip-sessao" id="chipUsuarioAtual" hidden></div>
+          <button id="botaoAtualizar" class="botao-secundario" type="button">
             Atualizar
           </button>
-          <button id="signOutButton" class="ghost-button ghost-button-danger" type="button">
+          <button id="botaoSair" class="botao-secundario botao-secundario-perigo" type="button">
             Sair
           </button>
         </div>
       </div>
 
-      <div class="hero-meta">
-        <span class="meta-pill">Busca imediata</span>
-        <span class="meta-pill">Reposicao rapida</span>
-        <span class="meta-pill">Historico recente</span>
-        <span class="meta-pill">Acesso seguro</span>
+      <div class="meta-hero">
+        <span class="pilula-meta">Busca imediata</span>
+        <span class="pilula-meta">Reposicao rapida</span>
+        <span class="pilula-meta">Historico recente</span>
+        <span class="pilula-meta">Acesso seguro</span>
       </div>
 
-      <div class="hero-highlights" aria-label="Destaques operacionais">
-        <article class="hero-highlight">
-          <span class="hero-highlight-label">Fluxo</span>
+      <div class="destaques-hero" aria-label="Destaques operacionais">
+        <article class="destaque-hero">
+          <span class="rotulo-destaque-hero">Fluxo</span>
           <strong>Reposicao em poucos toques</strong>
           <p>Entrada e saida ficam no mesmo card, sem trocar de tela nem abrir etapas extras.</p>
         </article>
 
-        <article class="hero-highlight">
-          <span class="hero-highlight-label">Leitura</span>
+        <article class="destaque-hero">
+          <span class="rotulo-destaque-hero">Leitura</span>
           <strong>Prioridade no que importa</strong>
           <p>Itens baixos e criticos aparecem com destaque para acelerar a decisao de compra e reposicao.</p>
         </article>
 
-        <article class="hero-highlight">
-          <span class="hero-highlight-label">Base</span>
+        <article class="destaque-hero">
+          <span class="rotulo-destaque-hero">Base</span>
           <strong>Base pronta para operar</strong>
           <p>Produtos e movimentacoes ficam centralizados para uso diario, demonstracao e acompanhamento.</p>
         </article>
       </div>
     </header>
 
-    <nav class="view-switcher" aria-label="Alternar visualizacao">
-      <button class="view-button is-active" id="productsTab" type="button" data-view="products">
+    <nav class="alternador-visualizacao" aria-label="Alternar visualizacao" role="tablist">
+      <button class="botao-visualizacao is-active" id="abaProdutos" type="button" data-view="products" role="tab"
+        aria-selected="true" aria-controls="painelProdutos" tabindex="0">
         Estoque
       </button>
-      <button class="view-button" id="historyTab" type="button" data-view="history">
+      <button class="botao-visualizacao" id="abaHistorico" type="button" data-view="history" role="tab" aria-selected="false"
+        aria-controls="painelHistorico" tabindex="-1">
         Historico
       </button>
     </nav>
 
-    <div id="noticeBar" class="notice-bar" hidden></div>
+    <div id="barraAviso" class="barra-aviso" role="status" aria-live="polite" aria-atomic="true" hidden></div>
 
-    <main class="content-stack">
-      <section id="productsView" class="panel is-active" aria-labelledby="productsTitle">
-        <div class="section-head">
+    <main class="pilha-conteudo">
+      <section id="painelProdutos" class="panel is-active" role="tabpanel" aria-labelledby="abaProdutos">
+        <div class="cabecalho-secao">
           <div>
             <p class="eyebrow">Lista principal</p>
             <h2 id="productsTitle">Produtos</h2>
-            <p class="section-text">
+            <p class="texto-secao">
               Localize itens rapido, acompanhe o minimo ideal e resolva reposicoes sem perder tempo.
             </p>
-            <p id="productsRuntimeSummary" class="section-runtime"></p>
+            <p id="resumoAtualizacaoProdutos" class="resumo-atualizacao-secao"></p>
           </div>
 
-          <div class="metrics-grid" aria-label="Resumo do estoque">
-            <article class="metric-card metric-card-total">
-              <span class="metric-label">Total</span>
-              <strong class="metric-value" id="metricTotal">0</strong>
+          <div class="grade-metricas" aria-label="Resumo do estoque">
+            <article class="card-metrica card-metrica-total">
+              <span class="rotulo-metrica">Total</span>
+              <strong class="valor-metrica" id="metricaTotal">0</strong>
             </article>
 
-            <article class="metric-card metric-card-ok">
-              <span class="metric-label">OK</span>
-              <strong class="metric-value metric-ok" id="metricOk">0</strong>
+            <article class="card-metrica card-metrica-ok">
+              <span class="rotulo-metrica">OK</span>
+              <strong class="valor-metrica metrica-ok" id="metricaOk">0</strong>
             </article>
 
-            <article class="metric-card metric-card-low">
-              <span class="metric-label">Baixo</span>
-              <strong class="metric-value metric-low" id="metricLow">0</strong>
+            <article class="card-metrica card-metrica-baixa">
+              <span class="rotulo-metrica">Baixo</span>
+              <strong class="valor-metrica metrica-baixa" id="metricaBaixa">0</strong>
             </article>
 
-            <article class="metric-card metric-card-critical">
-              <span class="metric-label">Critico</span>
-              <strong class="metric-value metric-critical" id="metricCritical">0</strong>
+            <article class="card-metrica card-metrica-critica">
+              <span class="rotulo-metrica">Critico</span>
+              <strong class="valor-metrica metrica-critica" id="metricaCritica">0</strong>
             </article>
           </div>
         </div>
 
-        <div class="products-toolbar" aria-label="Busca e filtros do estoque">
-          <div class="form-field form-field-wide search-field">
-            <label for="productSearch">Buscar item</label>
-            <input id="productSearch" name="search" type="search" autocomplete="off"
+        <div class="barra-produtos" aria-label="Busca e filtros do estoque">
+          <div class="campo-formulario campo-formulario-amplo campo-busca">
+            <label for="buscaProduto">Buscar item</label>
+            <input id="buscaProduto" name="search" type="search" autocomplete="off"
               placeholder="Ex.: Cheddar, Coca-Cola, Pao brioche" />
           </div>
 
-          <div id="productTypeFilters" class="type-filter-group" role="group" aria-label="Filtrar por tipo">
-            <button class="filter-chip is-active" type="button" data-type-filter="all">
+          <div id="filtrosTipoProduto" class="grupo-filtro-tipo" role="group" aria-label="Filtrar por tipo">
+            <button class="chip-filtro is-active" type="button" data-type-filter="all">
               Todos
             </button>
-            <button class="filter-chip" type="button" data-type-filter="ingrediente">
+            <button class="chip-filtro" type="button" data-type-filter="ingrediente">
               Ingredientes
             </button>
-            <button class="filter-chip" type="button" data-type-filter="bebida">
+            <button class="chip-filtro" type="button" data-type-filter="bebida">
               Bebidas
             </button>
-            <button class="filter-chip" type="button" data-type-filter="insumo">
+            <button class="chip-filtro" type="button" data-type-filter="insumo">
               Insumos
             </button>
-            <button class="filter-chip" type="button" data-type-filter="produto_preparado">
+            <button class="chip-filtro" type="button" data-type-filter="produto_preparado">
               Preparados
             </button>
           </div>
         </div>
 
-        <div id="productsEmptyState" class="state-card" hidden></div>
-        <div id="productList" class="card-list" aria-live="polite"></div>
+        <div id="estadoVazioProdutos" class="card-estado" hidden></div>
+        <div id="listaProdutos" class="lista-cards" aria-live="polite"></div>
 
-        <div class="utility-grid">
-          <section class="alerts-panel" aria-labelledby="alertsTitle">
-            <div class="alerts-head">
+        <div class="grade-utilitarios">
+          <section class="painel-alertas" aria-labelledby="alertsTitle">
+            <div class="cabecalho-alertas">
               <div>
                 <p class="eyebrow">Reposicao</p>
                 <h3 id="alertsTitle">Alertas de mercadoria</h3>
-                <p class="section-text panel-text">
+                <p class="texto-secao texto-painel">
                   Veja primeiro o que esta em baixa e o que ja precisa de acao imediata.
                 </p>
               </div>
             </div>
 
-            <div id="alertsEmptyState" class="state-card state-card-compact" hidden></div>
-            <div id="alertsList" class="alerts-list" aria-live="polite"></div>
+            <div id="estadoVazioAlertas" class="card-estado card-estado-compacto" hidden></div>
+            <div id="listaAlertas" class="lista-alertas" aria-live="polite"></div>
           </section>
 
-          <section class="create-panel" aria-labelledby="createTitle">
-            <div class="create-head">
+          <section class="painel-cadastro" aria-labelledby="createTitle">
+            <div class="cabecalho-cadastro">
               <div>
                 <p class="eyebrow">Cadastro rapido</p>
                 <h3 id="createTitle">Novo item</h3>
-                <p class="section-text panel-text">
+                <p class="texto-secao texto-painel">
                   Cadastre itens com tipo, unidade e minimo ideal em um fluxo simples.
                 </p>
               </div>
             </div>
 
-            <p id="accessModeNote" class="panel-note" hidden></p>
+            <p id="notaModoAcesso" class="nota-painel" hidden></p>
 
-            <form id="createProductForm" class="create-form">
-              <div class="form-field form-field-wide">
-                <label for="productName">Nome do item</label>
-                <input id="productName" name="name" type="text" maxlength="80"
+            <form id="formNovoProduto" class="form-cadastro">
+              <div class="campo-formulario campo-formulario-amplo">
+                <label for="nomeProduto">Nome do item</label>
+                <input id="nomeProduto" name="name" type="text" maxlength="80"
                   placeholder="Ex.: Requeijao, Refrigerante lata, Copo 300ml" required />
               </div>
 
-              <div class="form-field">
-                <label for="productType">Tipo</label>
-                <select id="productType" name="product_type" required>
+              <div class="campo-formulario">
+                <label for="tipoProduto">Tipo</label>
+                <select id="tipoProduto" name="product_type" required>
                   <option value="ingrediente">Ingrediente</option>
                   <option value="bebida">Bebida</option>
                   <option value="insumo">Insumo</option>
@@ -263,9 +265,9 @@
                 </select>
               </div>
 
-              <div class="form-field">
-                <label for="productUnit">Unidade</label>
-                <select id="productUnit" name="stock_unit" required>
+              <div class="campo-formulario">
+                <label for="unidadeProduto">Unidade</label>
+                <select id="unidadeProduto" name="stock_unit" required>
                   <option value="un">Unidade</option>
                   <option value="lata">Lata</option>
                   <option value="garrafa">Garrafa</option>
@@ -278,17 +280,17 @@
                 </select>
               </div>
 
-              <div class="form-field">
-                <label for="productQuantity">Quantidade inicial</label>
-                <input id="productQuantity" name="quantity" type="number" min="0" step="1" value="0" required />
+              <div class="campo-formulario">
+                <label for="quantidadeProduto">Quantidade inicial</label>
+                <input id="quantidadeProduto" name="quantity" type="number" min="0" step="1" value="0" required />
               </div>
 
-              <div class="form-field">
-                <label for="productMinimum">Minimo ideal</label>
-                <input id="productMinimum" name="min_quantity" type="number" min="1" step="1" value="5" required />
+              <div class="campo-formulario">
+                <label for="minimoProduto">Minimo ideal</label>
+                <input id="minimoProduto" name="min_quantity" type="number" min="1" step="1" value="5" required />
               </div>
 
-              <button id="createProductButton" class="ghost-button create-button" type="submit">
+              <button id="botaoNovoProduto" class="botao-secundario botao-cadastro" type="submit">
                 Adicionar item
               </button>
             </form>
@@ -296,64 +298,70 @@
         </div>
       </section>
 
-      <section id="historyView" class="panel" aria-labelledby="historyTitle">
-        <div class="section-head history-head">
+      <section id="painelHistorico" class="panel" role="tabpanel" aria-labelledby="abaHistorico" hidden>
+        <div class="cabecalho-secao history-head">
           <div>
             <p class="eyebrow">Movimentacoes</p>
             <h2 id="historyTitle">Historico</h2>
-            <p class="section-text">
+            <p class="texto-secao">
               Consulte as ultimas entradas e saidas com contexto suficiente para entender cada ajuste.
             </p>
-            <p id="historyRuntimeSummary" class="section-runtime"></p>
+            <p id="resumoAtualizacaoHistorico" class="resumo-atualizacao-secao"></p>
           </div>
         </div>
 
-        <div id="historyEmptyState" class="state-card" hidden></div>
-        <div id="historyList" class="history-list" aria-live="polite"></div>
+        <div id="estadoVazioHistorico" class="card-estado" hidden></div>
+        <div id="listaHistorico" class="history-list" aria-live="polite"></div>
       </section>
     </main>
   </div>
 
-  <template id="productCardTemplate">
-    <article class="product-card">
-      <div class="product-copy">
-        <div class="product-copy-main">
-          <div class="product-headline">
-            <h3 class="product-name"></h3>
-            <div class="product-tags" aria-label="Classificacao do item">
-              <span class="inline-badge product-type-badge"></span>
-              <span class="inline-badge product-unit-badge"></span>
+  <template id="modeloCardProduto">
+    <article class="card-produto">
+      <div class="conteudo-produto">
+        <div class="conteudo-produto-principal">
+          <div class="cabecalho-produto">
+            <h3 class="nome-produto"></h3>
+            <div class="etiquetas-produto" aria-label="Classificacao do item">
+              <span class="etiqueta-inline etiqueta-tipo-produto"></span>
+              <span class="etiqueta-inline etiqueta-unidade-produto"></span>
             </div>
           </div>
-          <p class="product-meta">
-            Minimo ideal: <span class="product-min"></span>
-            <span class="product-unit"></span>
+          <p class="meta-produto">
+            Minimo ideal: <span class="minimo-produto"></span>
+            <span class="unidade-produto"></span>
           </p>
 
-          <div class="product-health" aria-label="Saude do estoque">
-            <div class="stock-progress" aria-hidden="true">
-              <span class="stock-progress-fill"></span>
+          <div class="saude-produto" aria-label="Saude do estoque">
+            <div class="progresso-estoque" aria-hidden="true">
+              <span class="preenchimento-progresso-estoque"></span>
             </div>
-            <p class="stock-note"></p>
+            <p class="observacao-estoque"></p>
           </div>
         </div>
 
-        <div class="quantity-block">
-          <span class="quantity-label">Estoque atual</span>
-          <strong class="quantity-value"></strong>
-          <span class="quantity-unit"></span>
+        <div class="bloco-quantidade">
+          <span class="rotulo-quantidade">Estoque atual</span>
+          <strong class="valor-quantidade"></strong>
+          <span class="unidade-quantidade"></span>
         </div>
       </div>
 
-      <div class="product-footer">
-        <span class="status-badge"></span>
+      <div class="rodape-produto">
+        <span class="etiqueta-status"></span>
 
-        <div class="action-group" aria-label="Ajustar quantidade">
-          <button class="action-button" type="button" data-action="decrease" aria-label="Remover uma unidade">
+        <div class="controle-ajuste-quantidade">
+          <label class="somente-leitura rotulo-ajuste-quantidade" for="campoAjusteModelo">Quantidade do ajuste</label>
+          <input class="campo-ajuste-quantidade" id="campoAjusteModelo" type="number" min="1" step="1" value="1"
+            inputmode="numeric" aria-label="Quantidade do ajuste" />
+        </div>
+
+        <div class="grupo-acoes" aria-label="Ajustar quantidade">
+          <button class="botao-acao" type="button" data-action="decrease" aria-label="Remover quantidade">
             -
           </button>
-          <button class="action-button action-button-add" type="button" data-action="increase"
-            aria-label="Adicionar uma unidade">
+          <button class="botao-acao botao-acao-adicionar" type="button" data-action="increase"
+            aria-label="Adicionar quantidade">
             +
           </button>
         </div>
@@ -361,23 +369,23 @@
     </article>
   </template>
 
-  <template id="historyCardTemplate">
-    <article class="history-card">
-      <div class="history-copy">
-        <h3 class="history-product"></h3>
-        <p class="history-summary"></p>
-        <div class="history-flow" aria-label="Fluxo da movimentacao">
-          <span class="history-flow-value history-flow-before"></span>
-          <span class="history-flow-arrow">-&gt;</span>
-          <span class="history-flow-value history-flow-after"></span>
+  <template id="modeloCardHistorico">
+    <article class="card-historico">
+      <div class="conteudo-historico">
+        <h3 class="produto-historico"></h3>
+        <p class="resumo-historico"></p>
+        <div class="fluxo-historico" aria-label="Fluxo da movimentacao">
+          <span class="valor-fluxo-historico valor-fluxo-historico-anterior"></span>
+          <span class="seta-fluxo-historico">-&gt;</span>
+          <span class="valor-fluxo-historico valor-fluxo-historico-posterior"></span>
         </div>
-        <p class="history-detail"></p>
-        <p class="history-date"></p>
+        <p class="detalhe-historico"></p>
+        <p class="data-historico"></p>
       </div>
 
-      <div class="history-meta">
-        <span class="history-type"></span>
-        <strong class="history-quantity"></strong>
+      <div class="meta-historico">
+        <span class="tipo-historico"></span>
+        <strong class="quantidade-historico"></strong>
       </div>
     </article>
   </template>

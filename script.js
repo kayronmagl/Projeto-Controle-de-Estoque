@@ -1,39 +1,39 @@
 "use strict";
 
-const supabaseUrl = "https://bmxlvsxluwcxuydnlawc.supabase.co";
-const supabasePublishableKey = "sb_publishable_jWyWeiYTnu4c8UllXXvm3g_0meVpJM2";
-const AUTO_REFRESH_INTERVAL_MS = 15000;
+const urlSupabase = "https://bmxlvsxluwcxuydnlawc.supabase.co";
+const chavePublicaSupabase = "sb_publishable_jWyWeiYTnu4c8UllXXvm3g_0meVpJM2";
+const INTERVALO_ATUALIZACAO_AUTOMATICA_MS = 15000;
 
-const state = {
-  view: "products",
-  products: [],
-  history: [],
-  productSearch: "",
-  productTypeFilter: "all",
-  pendingIds: new Set(),
-  isCreating: false,
-  logoutRequested: false,
-  session: null,
-  productsUpdatedAt: null,
-  historyUpdatedAt: null,
-  autoRefreshTimerId: null,
+const estado = {
+  visualizacao: "produtos",
+  produtos: [],
+  historico: [],
+  buscaProduto: "",
+  filtroTipoProduto: "all",
+  idsPendentes: new Set(),
+  estaCriando: false,
+  saidaSolicitada: false,
+  sessao: null,
+  produtosAtualizadosEm: null,
+  historicoAtualizadoEm: null,
+  idTemporizadorAtualizacao: null,
 };
 
-const PRODUCT_TYPE_LABELS = {
+const ROTULOS_TIPO_PRODUTO = {
   ingrediente: "Ingrediente",
   bebida: "Bebida",
   insumo: "Insumo",
   produto_preparado: "Preparado",
 };
 
-const PRODUCT_TYPE_ORDER = {
+const ORDEM_TIPO_PRODUTO = {
   ingrediente: 0,
   bebida: 1,
   insumo: 2,
   produto_preparado: 3,
 };
 
-const STOCK_UNIT_LABELS = {
+const ROTULOS_UNIDADE_ESTOQUE = {
   un: { short: "un", singular: "unidade", plural: "unidades" },
   kg: { short: "kg", singular: "kg", plural: "kg" },
   g: { short: "g", singular: "g", plural: "g" },
@@ -45,63 +45,63 @@ const STOCK_UNIT_LABELS = {
   cx: { short: "cx", singular: "caixa", plural: "caixas" },
 };
 
-const els = {
-  authShell: document.getElementById("authShell"),
-  authForm: document.getElementById("authForm"),
-  authNotice: document.getElementById("authNotice"),
-  authSubmitButton: document.getElementById("authSubmitButton"),
-  appShell: document.getElementById("appShell"),
-  currentUserChip: document.getElementById("currentUserChip"),
-  signOutButton: document.getElementById("signOutButton"),
-  noticeBar: document.getElementById("noticeBar"),
-  refreshButton: document.getElementById("refreshButton"),
-  productsTab: document.getElementById("productsTab"),
-  historyTab: document.getElementById("historyTab"),
-  productsView: document.getElementById("productsView"),
-  historyView: document.getElementById("historyView"),
-  productList: document.getElementById("productList"),
-  historyList: document.getElementById("historyList"),
-  alertsList: document.getElementById("alertsList"),
-  productsEmptyState: document.getElementById("productsEmptyState"),
-  historyEmptyState: document.getElementById("historyEmptyState"),
-  alertsEmptyState: document.getElementById("alertsEmptyState"),
-  createProductForm: document.getElementById("createProductForm"),
-  createProductButton: document.getElementById("createProductButton"),
-  productSearch: document.getElementById("productSearch"),
-  productTypeFilters: document.getElementById("productTypeFilters"),
-  accessModeNote: document.getElementById("accessModeNote"),
-  productsRuntimeSummary: document.getElementById("productsRuntimeSummary"),
-  historyRuntimeSummary: document.getElementById("historyRuntimeSummary"),
-  metricTotal: document.getElementById("metricTotal"),
-  metricOk: document.getElementById("metricOk"),
-  metricLow: document.getElementById("metricLow"),
-  metricCritical: document.getElementById("metricCritical"),
-  productCardTemplate: document.getElementById("productCardTemplate"),
-  historyCardTemplate: document.getElementById("historyCardTemplate"),
+const elementos = {
+  telaLogin: document.getElementById("telaLogin"),
+  formLogin: document.getElementById("formLogin"),
+  avisoLogin: document.getElementById("avisoLogin"),
+  botaoEntrar: document.getElementById("botaoEntrar"),
+  aplicacao: document.getElementById("aplicacao"),
+  chipUsuarioAtual: document.getElementById("chipUsuarioAtual"),
+  botaoSair: document.getElementById("botaoSair"),
+  barraAviso: document.getElementById("barraAviso"),
+  botaoAtualizar: document.getElementById("botaoAtualizar"),
+  abaProdutos: document.getElementById("abaProdutos"),
+  abaHistorico: document.getElementById("abaHistorico"),
+  painelProdutos: document.getElementById("painelProdutos"),
+  painelHistorico: document.getElementById("painelHistorico"),
+  listaProdutos: document.getElementById("listaProdutos"),
+  listaHistorico: document.getElementById("listaHistorico"),
+  listaAlertas: document.getElementById("listaAlertas"),
+  estadoVazioProdutos: document.getElementById("estadoVazioProdutos"),
+  estadoVazioHistorico: document.getElementById("estadoVazioHistorico"),
+  estadoVazioAlertas: document.getElementById("estadoVazioAlertas"),
+  formNovoProduto: document.getElementById("formNovoProduto"),
+  botaoNovoProduto: document.getElementById("botaoNovoProduto"),
+  buscaProduto: document.getElementById("buscaProduto"),
+  filtrosTipoProduto: document.getElementById("filtrosTipoProduto"),
+  notaModoAcesso: document.getElementById("notaModoAcesso"),
+  resumoAtualizacaoProdutos: document.getElementById("resumoAtualizacaoProdutos"),
+  resumoAtualizacaoHistorico: document.getElementById("resumoAtualizacaoHistorico"),
+  metricaTotal: document.getElementById("metricaTotal"),
+  metricaOk: document.getElementById("metricaOk"),
+  metricaBaixa: document.getElementById("metricaBaixa"),
+  metricaCritica: document.getElementById("metricaCritica"),
+  modeloCardProduto: document.getElementById("modeloCardProduto"),
+  modeloCardHistorico: document.getElementById("modeloCardHistorico"),
 };
 
-const isConfigured =
-  supabaseUrl &&
-  supabasePublishableKey &&
-  supabasePublishableKey !== "SUA_PUBLISHABLE_KEY" &&
+const estaConfigurado =
+  urlSupabase &&
+  chavePublicaSupabase &&
+  chavePublicaSupabase !== "SUA_PUBLISHABLE_KEY" &&
   typeof window.supabase !== "undefined";
 
-const supabaseClient = isConfigured
-  ? window.supabase.createClient(supabaseUrl, supabasePublishableKey)
+const clienteSupabase = estaConfigurado
+  ? window.supabase.createClient(urlSupabase, chavePublicaSupabase)
   : null;
 
-document.addEventListener("DOMContentLoaded", initializeApp);
+document.addEventListener("DOMContentLoaded", inicializarAplicacao);
 
-async function initializeApp() {
-  bindEvents();
-  syncTypeFilterState();
-  resetCreateForm();
-  renderProducts();
-  renderHistory();
-  setAuthenticated(false);
+async function inicializarAplicacao() {
+  registrarEventos();
+  sincronizarEstadoFiltroTipo();
+  resetarFormularioCriacao();
+  renderizarProdutos();
+  renderizarHistorico();
+  definirAutenticacao(false);
 
-  if (!isConfigured) {
-    showAuthNotice(
+  if (!estaConfigurado) {
+    mostrarAvisoLogin(
       "Configure a SUPABASE_PUBLISHABLE_KEY em script.js e execute o database.sql no Supabase para iniciar.",
       "error",
       true,
@@ -109,126 +109,128 @@ async function initializeApp() {
     return;
   }
 
-  supabaseClient.auth.onAuthStateChange(async (_event, session) => {
-    await applySession(session);
+  clienteSupabase.auth.onAuthStateChange(async (_event, sessao) => {
+    await aplicarSessao(sessao);
   });
 
-  const { data, error } = await supabaseClient.auth.getSession();
+  const { data, error } = await clienteSupabase.auth.getSession();
 
   if (error) {
-    showAuthNotice(getErrorMessage(error, "Nao foi possivel validar a sessao atual."), "error", true);
+    mostrarAvisoLogin(obterMensagemErro(error, "Nao foi possivel validar a sessao atual."), "error", true);
     return;
   }
 
-  await applySession(data.session, true);
+  await aplicarSessao(data.session, true);
 }
 
-function bindEvents() {
-  els.authForm.addEventListener("submit", handleSignIn);
-  els.signOutButton.addEventListener("click", handleSignOut);
-  els.productsTab.addEventListener("click", () => setView("products"));
-  els.historyTab.addEventListener("click", () => setView("history"));
-  els.refreshButton.addEventListener("click", handleRefresh);
-  els.productList.addEventListener("click", handleProductAction);
-  els.createProductForm.addEventListener("submit", handleCreateProduct);
-  els.productSearch.addEventListener("input", handleProductSearch);
-  els.productTypeFilters.addEventListener("click", handleTypeFilterClick);
-  window.addEventListener("focus", handleWindowFocus);
-  document.addEventListener("visibilitychange", handleVisibilityChange);
+function registrarEventos() {
+  elementos.formLogin.addEventListener("submit", processarLogin);
+  elementos.botaoSair.addEventListener("click", processarSaida);
+  elementos.abaProdutos.addEventListener("click", () => definirVisualizacao("produtos"));
+  elementos.abaHistorico.addEventListener("click", () => definirVisualizacao("historico"));
+  elementos.abaProdutos.addEventListener("keydown", lidarComTeclaAbas);
+  elementos.abaHistorico.addEventListener("keydown", lidarComTeclaAbas);
+  elementos.botaoAtualizar.addEventListener("click", processarAtualizacao);
+  elementos.listaProdutos.addEventListener("click", lidarComAcaoProduto);
+  elementos.formNovoProduto.addEventListener("submit", lidarComCriacaoProduto);
+  elementos.buscaProduto.addEventListener("input", lidarComBuscaProduto);
+  elementos.filtrosTipoProduto.addEventListener("click", lidarComCliqueFiltroTipo);
+  window.addEventListener("focus", lidarComFocoJanela);
+  document.addEventListener("visibilitychange", lidarComMudancaVisibilidade);
 }
 
-async function applySession(session, silent = false) {
-  const currentToken = state.session?.access_token || null;
-  const nextToken = session?.access_token || null;
-  const sessionChanged = currentToken !== nextToken;
+async function aplicarSessao(sessao, silent = false) {
+  const tokenAtual = estado.sessao?.access_token || null;
+  const proximoToken = sessao?.access_token || null;
+  const sessaoAlterada = tokenAtual !== proximoToken;
 
-  state.session = session || null;
-  setAuthenticated(Boolean(session?.user));
-  syncAutoRefresh();
+  estado.sessao = sessao || null;
+  definirAutenticacao(Boolean(sessao?.user));
+  sincronizarAtualizacaoAutomatica();
 
-  if (!state.session) {
-    if (sessionChanged || !silent) {
-      resetState();
-      clearNotice();
+  if (!estado.sessao) {
+    if (sessaoAlterada || !silent) {
+      resetarEstado();
+      limparAviso();
 
-      if (state.logoutRequested) {
-        state.logoutRequested = false;
-        showAuthNotice("Sessao encerrada.", "success", true);
+      if (estado.saidaSolicitada) {
+        estado.saidaSolicitada = false;
+        mostrarAvisoLogin("Sessao encerrada.", "success", true);
       } else {
-        showAuthNotice("Entre com email e senha para acessar o controle de estoque.", "warning", true);
+        mostrarAvisoLogin("Entre com email e senha para acessar o controle de estoque.", "warning", true);
       }
     }
 
     return;
   }
 
-  state.logoutRequested = false;
-  clearAuthNotice();
-  updateCurrentUser(session.user);
+  estado.saidaSolicitada = false;
+  limparAvisoLogin();
+  atualizarUsuarioAtual(sessao.user);
 
-  if (!sessionChanged && silent) {
+  if (!sessaoAlterada && silent) {
     return;
   }
 
-  await fetchProducts(true);
+  await buscarProdutos(true);
 
-  if (state.view === "history") {
-    await fetchHistory(true);
+  if (estado.visualizacao === "historico") {
+    await buscarHistorico(true);
   }
 
   if (!silent) {
-    showNotice("Acesso liberado.", "success");
+    mostrarAviso("Acesso liberado.", "success");
   }
 }
 
-function setAuthenticated(authenticated) {
-  const isAuthenticated = Boolean(authenticated);
+function definirAutenticacao(authenticated) {
+  const estaAutenticado = Boolean(authenticated);
 
-  els.authShell.hidden = isAuthenticated;
-  els.appShell.hidden = !isAuthenticated;
-  els.currentUserChip.hidden = !isAuthenticated;
+  elementos.telaLogin.hidden = estaAutenticado;
+  elementos.aplicacao.hidden = !estaAutenticado;
+  elementos.chipUsuarioAtual.hidden = !estaAutenticado;
 
-  if (els.accessModeNote) {
-    els.accessModeNote.hidden = !isAuthenticated;
-    els.accessModeNote.classList.remove("is-warning", "is-success");
+  if (elementos.notaModoAcesso) {
+    elementos.notaModoAcesso.hidden = !estaAutenticado;
+    elementos.notaModoAcesso.classList.remove("is-warning", "is-success");
 
-    if (isAuthenticated) {
-      els.accessModeNote.textContent =
+    if (estaAutenticado) {
+      elementos.notaModoAcesso.textContent =
         "Acesso autenticado ativo. Cadastro, atualizacao de estoque e historico estao liberados.";
-      els.accessModeNote.classList.add("is-success");
+      elementos.notaModoAcesso.classList.add("is-success");
     }
   }
 
-  syncCreateFormState();
+  sincronizarEstadoFormularioCriacao();
 }
 
-function updateCurrentUser(user) {
+function atualizarUsuarioAtual(user) {
   const email = user?.email || "usuario autenticado";
-  els.currentUserChip.textContent = email;
+  elementos.chipUsuarioAtual.textContent = email;
 }
 
-async function handleSignIn(event) {
+async function processarLogin(event) {
   event.preventDefault();
 
-  if (!supabaseClient) {
-    showAuthNotice("A configuracao do Supabase ainda nao foi concluida.", "error", true);
+  if (!clienteSupabase) {
+    mostrarAvisoLogin("A configuracao do Supabase ainda nao foi concluida.", "error", true);
     return;
   }
 
-  const formData = new FormData(els.authForm);
+  const formData = new FormData(elementos.formLogin);
   const email = String(formData.get("email") || "").trim();
   const password = String(formData.get("password") || "");
 
   if (!email || !password) {
-    showAuthNotice("Informe email e senha para entrar.", "error", true);
+    mostrarAvisoLogin("Informe email e senha para entrar.", "error", true);
     return;
   }
 
-  setAuthFormDisabled(true);
-  showAuthNotice("Validando acesso...", "warning", true);
+  definirFormularioLoginDesabilitado(true);
+  mostrarAvisoLogin("Validando acesso...", "warning", true);
 
   try {
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
+    const { data, error } = await clienteSupabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -237,161 +239,187 @@ async function handleSignIn(event) {
       throw error;
     }
 
-    const activeSession =
+    const sessaoAtiva =
       data?.session ||
-      (await supabaseClient.auth.getSession()).data.session ||
+      (await clienteSupabase.auth.getSession()).data.session ||
       null;
 
-    if (!activeSession?.user) {
+    if (!sessaoAtiva?.user) {
       throw new Error("Sessao de login nao retornada.");
     }
 
-    await applySession(activeSession);
-    showAuthNotice("Acesso validado. Carregando painel...", "success", true);
-    els.authForm.reset();
+    await aplicarSessao(sessaoAtiva);
+    mostrarAvisoLogin("Acesso validado. Carregando painel...", "success", true);
+    elementos.formLogin.reset();
   } catch (error) {
-    showAuthNotice(getErrorMessage(error, "Nao foi possivel realizar o login."), "error", true);
+    mostrarAvisoLogin(obterMensagemErro(error, "Nao foi possivel realizar o login."), "error", true);
   } finally {
-    setAuthFormDisabled(false);
+    definirFormularioLoginDesabilitado(false);
   }
 }
 
-async function handleSignOut() {
-  if (!supabaseClient) {
+async function processarSaida() {
+  if (!clienteSupabase) {
     return;
   }
 
-  if (state.logoutRequested) {
+  if (estado.saidaSolicitada) {
     return;
   }
 
-  els.signOutButton.disabled = true;
-  state.logoutRequested = true;
-  await applySession(null, true);
+  elementos.botaoSair.disabled = true;
+  estado.saidaSolicitada = true;
+  await aplicarSessao(null, true);
 
   try {
-    const { error } = await supabaseClient.auth.signOut({ scope: "local" });
+    const { error } = await clienteSupabase.auth.signOut({ scope: "local" });
 
     if (error) {
       throw error;
     }
   } catch (error) {
-    showAuthNotice(getErrorMessage(error, "Nao foi possivel encerrar a sessao."), "error", true);
+    mostrarAvisoLogin(obterMensagemErro(error, "Nao foi possivel encerrar a sessao."), "error", true);
   } finally {
-    els.signOutButton.disabled = false;
+    elementos.botaoSair.disabled = false;
   }
 }
 
-async function handleRefresh() {
-  if (!supabaseClient || !state.session) {
-    showAuthNotice("Faca login para atualizar os dados.", "warning", true);
+async function processarAtualizacao() {
+  if (!clienteSupabase || !estado.sessao) {
+    mostrarAvisoLogin("Faca login para atualizar os dados.", "warning", true);
     return;
   }
 
-  await refreshActiveData();
+  await atualizarDadosAtivos();
 }
 
-function setView(view) {
-  state.view = view;
-  els.productsTab.classList.toggle("is-active", view === "products");
-  els.historyTab.classList.toggle("is-active", view === "history");
-  els.productsView.classList.toggle("is-active", view === "products");
-  els.historyView.classList.toggle("is-active", view === "history");
+function definirVisualizacao(visualizacao) {
+  estado.visualizacao = visualizacao;
+  const exibeProdutos = visualizacao === "produtos";
+  const exibeHistorico = visualizacao === "historico";
 
-  if (view === "products" && state.session) {
-    fetchProducts(true);
+  elementos.abaProdutos.classList.toggle("is-active", exibeProdutos);
+  elementos.abaHistorico.classList.toggle("is-active", exibeHistorico);
+  elementos.abaProdutos.setAttribute("aria-selected", String(exibeProdutos));
+  elementos.abaHistorico.setAttribute("aria-selected", String(exibeHistorico));
+  elementos.abaProdutos.tabIndex = exibeProdutos ? 0 : -1;
+  elementos.abaHistorico.tabIndex = exibeHistorico ? 0 : -1;
+  elementos.painelProdutos.classList.toggle("is-active", exibeProdutos);
+  elementos.painelHistorico.classList.toggle("is-active", exibeHistorico);
+  elementos.painelProdutos.hidden = !exibeProdutos;
+  elementos.painelHistorico.hidden = !exibeHistorico;
+
+  if (visualizacao === "produtos" && estado.sessao) {
+    buscarProdutos(true);
   }
 
-  if (view === "history" && state.session) {
-    fetchHistory();
+  if (visualizacao === "historico" && estado.sessao) {
+    buscarHistorico();
   }
 }
 
-async function fetchProducts(silent = false) {
-  if (!supabaseClient || !state.session) {
+function lidarComTeclaAbas(event) {
+  if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+    return;
+  }
+
+  event.preventDefault();
+
+  if (event.key === "ArrowRight") {
+    definirVisualizacao("historico");
+    elementos.abaHistorico.focus();
+    return;
+  }
+
+  definirVisualizacao("produtos");
+  elementos.abaProdutos.focus();
+}
+
+async function buscarProdutos(silent = false) {
+  if (!clienteSupabase || !estado.sessao) {
     return;
   }
 
   if (!silent) {
-    showNotice("Carregando produtos...");
+    mostrarAviso("Carregando produtos...");
   }
 
   try {
-    const { data, error } = await supabaseClient.rpc("list_products");
+    const { data, error } = await clienteSupabase.rpc("list_products");
 
     if (error) {
       throw error;
     }
 
-    state.products = sortProducts(
+    estado.produtos = ordenarProdutos(
       (Array.isArray(data) ? data : []).filter((product) => product?.is_active !== false),
     );
-    state.productsUpdatedAt = new Date().toISOString();
-    renderProducts();
-    clearNotice();
+    estado.produtosAtualizadosEm = new Date().toISOString();
+    renderizarProdutos();
+    limparAviso();
   } catch (error) {
-    showNotice(getErrorMessage(error, "Nao foi possivel carregar os produtos."), "error", true);
+    mostrarAviso(obterMensagemErro(error, "Nao foi possivel carregar os produtos."), "error", true);
   }
 }
 
-async function fetchHistory(silent = false) {
-  if (!supabaseClient || !state.session) {
+async function buscarHistorico(silent = false) {
+  if (!clienteSupabase || !estado.sessao) {
     return;
   }
 
   if (!silent) {
-    showNotice("Carregando historico...");
+    mostrarAviso("Carregando historico...");
   }
 
   try {
-    const { data, error } = await supabaseClient.rpc("list_movements");
+    const { data, error } = await clienteSupabase.rpc("list_movements");
 
     if (error) {
       throw error;
     }
 
-    state.history = (Array.isArray(data) ? data : []).slice(0, 30);
-    state.historyUpdatedAt = new Date().toISOString();
-    renderHistory();
-    clearNotice();
+    estado.historico = (Array.isArray(data) ? data : []).slice(0, 30);
+    estado.historicoAtualizadoEm = new Date().toISOString();
+    renderizarHistorico();
+    limparAviso();
   } catch (error) {
-    showNotice(getErrorMessage(error, "Nao foi possivel carregar o historico."), "error", true);
+    mostrarAviso(obterMensagemErro(error, "Nao foi possivel carregar o historico."), "error", true);
   }
 }
 
-function handleProductSearch(event) {
-  state.productSearch = String(event.target.value || "").trim().toLowerCase();
-  renderProducts();
+function lidarComBuscaProduto(event) {
+  estado.buscaProduto = String(event.target.value || "").trim().toLowerCase();
+  renderizarProdutos();
 }
 
-function handleTypeFilterClick(event) {
+function lidarComCliqueFiltroTipo(event) {
   const button = event.target.closest("[data-type-filter]");
 
   if (!button) {
     return;
   }
 
-  state.productTypeFilter = button.dataset.typeFilter || "all";
-  syncTypeFilterState();
-  renderProducts();
+  estado.filtroTipoProduto = button.dataset.typeFilter || "all";
+  sincronizarEstadoFiltroTipo();
+  renderizarProdutos();
 }
 
-async function handleWindowFocus() {
-  await refreshActiveData(true);
+async function lidarComFocoJanela() {
+  await atualizarDadosAtivos(true);
 }
 
-async function handleVisibilityChange() {
+async function lidarComMudancaVisibilidade() {
   if (document.hidden) {
     return;
   }
 
-  await refreshActiveData(true);
+  await atualizarDadosAtivos(true);
 }
 
-async function handleProductAction(event) {
+async function lidarComAcaoProduto(event) {
   const button = event.target.closest("[data-action]");
 
-  if (!button || !ensureWriteAccess()) {
+  if (!button || !garantirAcessoEscrita()) {
     return;
   }
 
@@ -401,269 +429,300 @@ async function handleProductAction(event) {
     return;
   }
 
-  const productId = card.dataset.productId;
-  const action = button.dataset.action;
-  const type = action === "increase" ? "entrada" : "saida";
+  const idProduto = card.dataset.productId;
+  const acao = button.dataset.action;
+  const tipoMovimentacao = acao === "increase" ? "entrada" : "saida";
+  const campoQuantidadeAjuste = card.querySelector(".campo-ajuste-quantidade");
+  const quantidadeInformadaAjuste = obterQuantidadeAjuste(campoQuantidadeAjuste);
 
-  await updateStock(productId, type);
+  if (quantidadeInformadaAjuste === null) {
+    mostrarAviso("Informe uma quantidade inteira maior ou igual a 1.", "error", true);
+    if (campoQuantidadeAjuste) {
+      campoQuantidadeAjuste.focus();
+    }
+    return;
+  }
+
+  await atualizarEstoque(idProduto, tipoMovimentacao, quantidadeInformadaAjuste);
 }
 
-async function handleCreateProduct(event) {
+async function lidarComCriacaoProduto(event) {
   event.preventDefault();
 
-  if (!supabaseClient || !ensureWriteAccess()) {
+  if (!clienteSupabase || !garantirAcessoEscrita()) {
     return;
   }
 
-  if (state.isCreating) {
+  if (estado.estaCriando) {
     return;
   }
 
-  const formData = new FormData(els.createProductForm);
-  const name = String(formData.get("name") || "").trim();
-  const productType = String(formData.get("product_type") || "ingrediente").trim();
-  const stockUnit = String(formData.get("stock_unit") || "un").trim();
-  const quantity = Number.parseInt(String(formData.get("quantity") || "0"), 10);
-  const minQuantity = Number.parseInt(String(formData.get("min_quantity") || "0"), 10);
+  const formData = new FormData(elementos.formNovoProduto);
+  const nome = String(formData.get("name") || "").trim();
+  const tipoProduto = String(formData.get("product_type") || "ingrediente").trim();
+  const unidadeEstoque = String(formData.get("stock_unit") || "un").trim();
+  const quantidade = Number.parseInt(String(formData.get("quantity") || "0"), 10);
+  const quantidadeMinima = Number.parseInt(String(formData.get("min_quantity") || "0"), 10);
 
-  if (!name) {
-    showNotice("Informe o nome do item antes de salvar.", "error", true);
+  if (!nome) {
+    mostrarAviso("Informe o nome do item antes de salvar.", "error", true);
     return;
   }
 
-  if (!Number.isInteger(quantity) || quantity < 0) {
-    showNotice("A quantidade inicial precisa ser um inteiro maior ou igual a zero.", "error", true);
+  if (!Number.isInteger(quantidade) || quantidade < 0) {
+    mostrarAviso("A quantidade inicial precisa ser um inteiro maior ou igual a zero.", "error", true);
     return;
   }
 
-  if (!Number.isInteger(minQuantity) || minQuantity < 1) {
-    showNotice("O minimo ideal precisa ser um inteiro maior ou igual a um.", "error", true);
+  if (!Number.isInteger(quantidadeMinima) || quantidadeMinima < 1) {
+    mostrarAviso("O minimo ideal precisa ser um inteiro maior ou igual a um.", "error", true);
     return;
   }
 
-  if (!PRODUCT_TYPE_LABELS[productType]) {
-    showNotice("Selecione um tipo de item valido.", "error", true);
+  if (!ROTULOS_TIPO_PRODUTO[tipoProduto]) {
+    mostrarAviso("Selecione um tipo de item valido.", "error", true);
     return;
   }
 
-  if (!STOCK_UNIT_LABELS[stockUnit]) {
-    showNotice("Selecione uma unidade valida.", "error", true);
+  if (!ROTULOS_UNIDADE_ESTOQUE[unidadeEstoque]) {
+    mostrarAviso("Selecione uma unidade valida.", "error", true);
     return;
   }
 
-  const duplicate = state.products.some(
-    (product) => String(product.name || "").trim().toLowerCase() === name.toLowerCase(),
+  const produtoDuplicado = estado.produtos.some(
+    (produto) => String(produto.name || "").trim().toLowerCase() === nome.toLowerCase(),
   );
 
-  if (duplicate) {
-    showNotice("Ja existe um item com esse nome no estoque.", "error", true);
+  if (produtoDuplicado) {
+    mostrarAviso("Ja existe um item com esse nome no estoque.", "error", true);
     return;
   }
 
-  state.isCreating = true;
-  syncCreateFormState();
-  showNotice("Salvando novo item...");
+  estado.estaCriando = true;
+  sincronizarEstadoFormularioCriacao();
+  mostrarAviso("Salvando novo item...");
 
   try {
-    const { error } = await supabaseClient.rpc("create_product_with_initial_stock", {
-      p_name: name,
-      p_initial_quantity: quantity,
-      p_min_quantity: minQuantity,
-      p_product_type: productType,
-      p_stock_unit: stockUnit,
+    const { error } = await clienteSupabase.rpc("create_product_with_initial_stock", {
+      p_name: nome,
+      p_initial_quantity: quantidade,
+      p_min_quantity: quantidadeMinima,
+      p_product_type: tipoProduto,
+      p_stock_unit: unidadeEstoque,
     });
 
     if (error) {
       throw error;
     }
 
-    await fetchProducts(true);
-    await fetchHistory(true);
-    resetCreateForm();
-    showNotice(`Item ${name} cadastrado com sucesso.`, "success");
+    await buscarProdutos(true);
+    await buscarHistorico(true);
+    resetarFormularioCriacao();
+    mostrarAviso(`Item ${nome} cadastrado com sucesso.`, "success");
   } catch (error) {
-    showNotice(getErrorMessage(error, "Nao foi possivel cadastrar o item."), "error", true);
+    mostrarAviso(obterMensagemErro(error, "Nao foi possivel cadastrar o item."), "error", true);
   } finally {
-    state.isCreating = false;
-    syncCreateFormState();
+    estado.estaCriando = false;
+    sincronizarEstadoFormularioCriacao();
   }
 }
 
-async function updateStock(id, type) {
-  if (!supabaseClient || !state.session || state.pendingIds.has(id)) {
+async function atualizarEstoque(id, tipoMovimentacao, quantidade = 1) {
+  if (!clienteSupabase || !estado.sessao || estado.idsPendentes.has(id)) {
     return;
   }
 
-  const product = state.products.find((item) => item.id === id);
+  const produto = estado.produtos.find((item) => item.id === id);
 
-  if (!product) {
+  if (!produto) {
     return;
   }
 
-  const delta = type === "entrada" ? 1 : -1;
-  const previousQuantity = Number(product.quantity) || 0;
-  const nextQuantity = Math.max(0, previousQuantity + delta);
+  const quantidadeSegura = Number.parseInt(String(quantidade), 10);
 
-  if (type === "saida" && previousQuantity === 0) {
-    showNotice("A quantidade ja esta em zero.", "error");
+  if (!Number.isInteger(quantidadeSegura) || quantidadeSegura < 1) {
+    mostrarAviso("Informe uma quantidade inteira maior ou igual a 1.", "error", true);
     return;
   }
 
-  state.pendingIds.add(id);
-  renderProducts();
-  showNotice("Atualizando estoque...");
+  const diferenca = tipoMovimentacao === "entrada" ? quantidadeSegura : -quantidadeSegura;
+  const quantidadeAnterior = Number(produto.quantity) || 0;
+  const proximaQuantidade = Math.max(0, quantidadeAnterior + diferenca);
+
+  if (tipoMovimentacao === "saida" && quantidadeAnterior === 0) {
+    mostrarAviso("A quantidade ja esta em zero.", "error");
+    return;
+  }
+
+  if (tipoMovimentacao === "saida" && quantidadeSegura > quantidadeAnterior) {
+    mostrarAviso("A quantidade informada e maior do que o estoque atual.", "error", true);
+    return;
+  }
+
+  estado.idsPendentes.add(id);
+  renderizarProdutos();
+  mostrarAviso("Atualizando estoque...");
 
   try {
-    const { error } = await supabaseClient.rpc("apply_stock_movement", {
+    const { error } = await clienteSupabase.rpc("apply_stock_movement", {
       p_product_id: id,
-      p_type: type,
-      p_quantity: 1,
+      p_type: tipoMovimentacao,
+      p_quantity: quantidadeSegura,
     });
 
     if (error) {
       throw error;
     }
 
-    await fetchProducts(true);
-    await fetchHistory(true);
+    await buscarProdutos(true);
+    await buscarHistorico(true);
 
-    const updatedProduct = state.products.find((item) => item.id === id) || {
-      ...product,
-      quantity: nextQuantity,
+    const produtoAtualizado = estado.produtos.find((item) => item.id === id) || {
+      ...produto,
+      quantity: proximaQuantidade,
     };
 
-    showNotice(buildStockNotice(updatedProduct, type), getNoticeTone(updatedProduct));
+    mostrarAviso(montarAvisoEstoque(produtoAtualizado, tipoMovimentacao), obterTomAviso(produtoAtualizado));
   } catch (error) {
-    showNotice(getErrorMessage(error, "Nao foi possivel atualizar o estoque."), "error", true);
+    mostrarAviso(obterMensagemErro(error, "Nao foi possivel atualizar o estoque."), "error", true);
   } finally {
-    state.pendingIds.delete(id);
-    renderProducts();
+    estado.idsPendentes.delete(id);
+    renderizarProdutos();
   }
 }
 
-function renderProducts() {
-  els.productList.innerHTML = "";
+function renderizarProdutos() {
+  elementos.listaProdutos.innerHTML = "";
 
-  const visibleProducts = getVisibleProducts();
-  const metrics = {
-    total: visibleProducts.length,
+  const produtosVisiveis = obterProdutosVisiveis();
+  const metricas = {
+    total: produtosVisiveis.length,
     ok: 0,
     low: 0,
     critical: 0,
   };
 
-  if (visibleProducts.length === 0) {
-    els.productsEmptyState.hidden = false;
-    els.productsEmptyState.textContent = buildProductsEmptyStateMessage();
+  if (produtosVisiveis.length === 0) {
+    elementos.estadoVazioProdutos.hidden = false;
+    elementos.estadoVazioProdutos.textContent = montarMensagemEstadoVazioProdutos();
   } else {
-    els.productsEmptyState.hidden = true;
+    elementos.estadoVazioProdutos.hidden = true;
   }
 
-  visibleProducts.forEach((product) => {
-    const status = getStatus(product.quantity, product.min_quantity);
-    metrics[status.key] += 1;
+  produtosVisiveis.forEach((produto) => {
+    const status = obterStatus(produto.quantity, produto.min_quantity);
+    metricas[status.key] += 1;
 
-    const card = els.productCardTemplate.content.firstElementChild.cloneNode(true);
-    const pending = state.pendingIds.has(product.id);
+    const card = elementos.modeloCardProduto.content.firstElementChild.cloneNode(true);
+    const pendente = estado.idsPendentes.has(produto.id);
 
-    card.dataset.productId = product.id;
-    card.classList.toggle("is-pending", pending);
-    card.classList.add(`product-card-${status.key}`);
-    card.querySelector(".product-name").textContent = product.name;
-    card.querySelector(".product-type-badge").textContent = getProductTypeLabel(product.product_type);
-    card.querySelector(".product-unit-badge").textContent = getUnitShortLabel(product.stock_unit);
-    card.querySelector(".product-min").textContent = String(product.min_quantity ?? 5);
-    card.querySelector(".product-unit").textContent = getUnitShortLabel(product.stock_unit);
-    card.querySelector(".quantity-value").textContent = String(product.quantity ?? 0);
-    card.querySelector(".quantity-unit").textContent = getUnitLabel(product.stock_unit, product.quantity ?? 0);
-    card.querySelector(".stock-note").textContent = buildProductStockNote(product, status);
+    card.dataset.productId = produto.id;
+    card.classList.toggle("is-pending", pendente);
+    card.classList.add(`card-produto-${status.key}`);
+    card.querySelector(".nome-produto").textContent = produto.name;
+    card.querySelector(".etiqueta-tipo-produto").textContent = obterRotuloTipoProduto(produto.product_type);
+    card.querySelector(".etiqueta-unidade-produto").textContent = obterRotuloCurtoUnidade(produto.stock_unit);
+    card.querySelector(".minimo-produto").textContent = String(produto.min_quantity ?? 5);
+    card.querySelector(".unidade-produto").textContent = obterRotuloCurtoUnidade(produto.stock_unit);
+    card.querySelector(".valor-quantidade").textContent = String(produto.quantity ?? 0);
+    card.querySelector(".unidade-quantidade").textContent = obterRotuloUnidade(produto.stock_unit, produto.quantity ?? 0);
+    card.querySelector(".observacao-estoque").textContent = montarObservacaoEstoqueProduto(produto, status);
 
-    const quantityBlock = card.querySelector(".quantity-block");
-    quantityBlock.classList.add(`quantity-block-${status.key}`);
+    const blocoQuantidade = card.querySelector(".bloco-quantidade");
+    blocoQuantidade.classList.add(`bloco-quantidade-${status.key}`);
 
-    const stockProgressFill = card.querySelector(".stock-progress-fill");
-    stockProgressFill.style.width = `${getStockProgressPercentage(product.quantity, product.min_quantity)}%`;
-    stockProgressFill.classList.add(`stock-progress-fill-${status.key}`);
+    const preenchimentoProgressoEstoque = card.querySelector(".preenchimento-progresso-estoque");
+    preenchimentoProgressoEstoque.style.width = `${obterPercentualProgressoEstoque(produto.quantity, produto.min_quantity)}%`;
+    preenchimentoProgressoEstoque.classList.add(`preenchimento-progresso-estoque-${status.key}`);
 
-    const statusBadge = card.querySelector(".status-badge");
-    statusBadge.textContent = status.label;
-    statusBadge.classList.add(`status-${status.key}`);
+    const etiquetaStatus = card.querySelector(".etiqueta-status");
+    etiquetaStatus.textContent = status.label;
+    etiquetaStatus.classList.add(`status-${status.key}`);
 
-    card.querySelectorAll(".action-button").forEach((button) => {
-      button.disabled = pending || !state.session;
+    const campoQuantidadeAjuste = card.querySelector(".campo-ajuste-quantidade");
+    const idCampoQuantidadeAjuste = `campo-ajuste-quantidade-${produto.id}`;
+    const rotuloQuantidadeAjuste = card.querySelector(".rotulo-ajuste-quantidade");
+    campoQuantidadeAjuste.id = idCampoQuantidadeAjuste;
+    campoQuantidadeAjuste.disabled = pendente || !estado.sessao;
+    campoQuantidadeAjuste.value = "1";
+    campoQuantidadeAjuste.setAttribute("aria-label", `Quantidade do ajuste para ${produto.name}`);
+    rotuloQuantidadeAjuste.setAttribute("for", idCampoQuantidadeAjuste);
+
+    card.querySelectorAll(".botao-acao").forEach((botao) => {
+      botao.disabled = pendente || !estado.sessao;
     });
 
-    els.productList.appendChild(card);
+    elementos.listaProdutos.appendChild(card);
   });
 
-  els.metricTotal.textContent = String(metrics.total);
-  els.metricOk.textContent = String(metrics.ok);
-  els.metricLow.textContent = String(metrics.low);
-  els.metricCritical.textContent = String(metrics.critical);
-  if (els.productsRuntimeSummary) {
-    els.productsRuntimeSummary.textContent = buildProductsRuntimeSummary(
-      visibleProducts.length,
-      state.products.length,
+  elementos.metricaTotal.textContent = String(metricas.total);
+  elementos.metricaOk.textContent = String(metricas.ok);
+  elementos.metricaBaixa.textContent = String(metricas.low);
+  elementos.metricaCritica.textContent = String(metricas.critical);
+  if (elementos.resumoAtualizacaoProdutos) {
+    elementos.resumoAtualizacaoProdutos.textContent = montarResumoAtualizacaoProdutos(
+      produtosVisiveis.length,
+      estado.produtos.length,
     );
   }
-  renderAlerts();
+  renderizarAlertas();
 }
 
-function renderHistory() {
-  els.historyList.innerHTML = "";
+function renderizarHistorico() {
+  elementos.listaHistorico.innerHTML = "";
 
-  if (state.history.length === 0) {
-    els.historyEmptyState.hidden = false;
-    els.historyEmptyState.textContent =
+  if (estado.historico.length === 0) {
+    elementos.estadoVazioHistorico.hidden = false;
+    elementos.estadoVazioHistorico.textContent =
       "As movimentacoes mais recentes vao aparecer aqui em ordem decrescente.";
-    if (els.historyRuntimeSummary) {
-      els.historyRuntimeSummary.textContent = buildHistoryRuntimeSummary(0);
+    if (elementos.resumoAtualizacaoHistorico) {
+      elementos.resumoAtualizacaoHistorico.textContent = montarResumoAtualizacaoHistorico(0);
     }
     return;
   }
 
-  els.historyEmptyState.hidden = true;
-  if (els.historyRuntimeSummary) {
-    els.historyRuntimeSummary.textContent = buildHistoryRuntimeSummary(state.history.length);
+  elementos.estadoVazioHistorico.hidden = true;
+  if (elementos.resumoAtualizacaoHistorico) {
+    elementos.resumoAtualizacaoHistorico.textContent = montarResumoAtualizacaoHistorico(estado.historico.length);
   }
 
-  state.history.forEach((movement) => {
-    const card = els.historyCardTemplate.content.firstElementChild.cloneNode(true);
-    const productName = movement.products?.name || "Produto removido";
-    const stockUnit = movement.products?.stock_unit || "un";
-    const historyFlow = getHistoryFlow(movement);
+  estado.historico.forEach((movimentacao) => {
+    const card = elementos.modeloCardHistorico.content.firstElementChild.cloneNode(true);
+    const nomeProduto = movimentacao.products?.name || "Produto removido";
+    const unidadeEstoque = movimentacao.products?.stock_unit || "un";
+    const fluxoHistorico = obterFluxoHistorico(movimentacao);
 
-    card.classList.add(`history-card-${movement.type}`);
-    card.querySelector(".history-product").textContent = productName;
-    card.querySelector(".history-summary").textContent = formatMovementSummary(movement);
-    card.querySelector(".history-detail").textContent = buildHistoryDetail(movement);
-    card.querySelector(".history-date").textContent = formatDate(movement.created_at);
+    card.classList.add(`card-historico-${movimentacao.type}`);
+    card.querySelector(".produto-historico").textContent = nomeProduto;
+    card.querySelector(".resumo-historico").textContent = formatarResumoMovimentacao(movimentacao);
+    card.querySelector(".detalhe-historico").textContent = montarDetalheHistorico(movimentacao);
+    card.querySelector(".data-historico").textContent = formatarData(movimentacao.created_at);
 
-    const historyFlowNode = card.querySelector(".history-flow");
+    const noFluxoHistorico = card.querySelector(".fluxo-historico");
 
-    if (historyFlow) {
-      card.querySelector(".history-flow-before").textContent = historyFlow.before;
-      card.querySelector(".history-flow-after").textContent = historyFlow.after;
+    if (fluxoHistorico) {
+      card.querySelector(".valor-fluxo-historico-anterior").textContent = fluxoHistorico.before;
+      card.querySelector(".valor-fluxo-historico-posterior").textContent = fluxoHistorico.after;
     } else {
-      historyFlowNode.hidden = true;
+      noFluxoHistorico.hidden = true;
     }
 
-    const typeNode = card.querySelector(".history-type");
-    typeNode.textContent = capitalize(movement.type);
-    typeNode.classList.add(`history-type-${movement.type}`);
+    const noTipoHistorico = card.querySelector(".tipo-historico");
+    noTipoHistorico.textContent = capitalizar(movimentacao.type);
+    noTipoHistorico.classList.add(`tipo-historico-${movimentacao.type}`);
 
-    card.querySelector(".history-quantity").textContent = formatQuantityWithUnit(movement.quantity, stockUnit);
-    els.historyList.appendChild(card);
+    card.querySelector(".quantidade-historico").textContent = formatarQuantidadeComUnidade(movimentacao.quantity, unidadeEstoque);
+    elementos.listaHistorico.appendChild(card);
   });
 }
 
-function renderAlerts() {
-  els.alertsList.innerHTML = "";
+function renderizarAlertas() {
+  elementos.listaAlertas.innerHTML = "";
 
-  const alertProducts = state.products
+  const alertProducts = estado.produtos
     .map((product) => ({
       product,
-      status: getStatus(product.quantity, product.min_quantity),
+      status: obterStatus(product.quantity, product.min_quantity),
     }))
     .filter((entry) => entry.status.key !== "ok")
     .sort((left, right) => {
@@ -682,40 +741,40 @@ function renderAlerts() {
     });
 
   if (alertProducts.length === 0) {
-    els.alertsEmptyState.hidden = false;
-    els.alertsEmptyState.textContent =
+    elementos.estadoVazioAlertas.hidden = false;
+    elementos.estadoVazioAlertas.textContent =
       "Nenhum item em falta no momento. O estoque esta operando dentro do minimo ideal.";
     return;
   }
 
-  els.alertsEmptyState.hidden = true;
+  elementos.estadoVazioAlertas.hidden = true;
 
   alertProducts.forEach(({ product, status }) => {
     const card = document.createElement("article");
-    card.className = `alert-card alert-${status.key}`;
+    card.className = `card-alerta alert-${status.key}`;
 
     const top = document.createElement("div");
-    top.className = "alert-card-top";
+    top.className = "topo-card-alerta";
 
     const title = document.createElement("h3");
-    title.className = "alert-card-title";
+    title.className = "titulo-card-alerta";
     title.textContent = product.name;
 
     const badge = document.createElement("span");
-    badge.className = `status-badge status-${status.key}`;
+    badge.className = `etiqueta-status status-${status.key}`;
     badge.textContent = status.label;
 
     const body = document.createElement("p");
-    body.className = "alert-card-body";
-    body.textContent = buildAlertMessage(product, status);
+    body.className = "corpo-card-alerta";
+    body.textContent = montarMensagemAlerta(product, status);
 
     top.append(title, badge);
     card.append(top, body);
-    els.alertsList.appendChild(card);
+    elementos.listaAlertas.appendChild(card);
   });
 }
 
-function getStatus(quantity, minQuantity) {
+function obterStatus(quantity, minQuantity) {
   const safeQuantity = Number(quantity) || 0;
   const safeMin = Number(minQuantity) || 5;
   const criticalLimit = Math.max(1, Math.floor(safeMin / 2));
@@ -731,7 +790,7 @@ function getStatus(quantity, minQuantity) {
   return { key: "ok", label: "OK" };
 }
 
-function formatDate(value) {
+function formatarData(value) {
   if (!value) {
     return "Sem data";
   }
@@ -742,42 +801,42 @@ function formatDate(value) {
   }).format(new Date(value));
 }
 
-function formatMovementSummary(movement) {
-  const amount = Number(movement.quantity) || 0;
-  const stockUnit = movement.products?.stock_unit || "un";
-  return `${capitalize(movement.type)} de ${formatQuantityWithUnit(amount, stockUnit)}`;
+function formatarResumoMovimentacao(movimentacao) {
+  const quantidadeMovimentada = Number(movimentacao.quantity) || 0;
+  const unidadeEstoque = movimentacao.products?.stock_unit || "un";
+  return `${capitalizar(movimentacao.type)} de ${formatarQuantidadeComUnidade(quantidadeMovimentada, unidadeEstoque)}`;
 }
 
-function buildAlertMessage(product, status) {
-  const quantity = Number(product.quantity) || 0;
-  const minimum = Number(product.min_quantity) || 5;
-  const missing = Math.max(0, minimum - quantity);
-  const stockUnit = product.stock_unit || "un";
+function montarMensagemAlerta(produto, status) {
+  const quantidade = Number(produto.quantity) || 0;
+  const minimoIdeal = Number(produto.min_quantity) || 5;
+  const quantidadeFaltante = Math.max(0, minimoIdeal - quantidade);
+  const unidadeEstoque = produto.stock_unit || "un";
 
   if (status.key === "critical") {
-    return `Nivel critico: ${formatQuantityWithUnit(quantity, stockUnit)} em estoque. Reponha ${formatQuantityWithUnit(missing || 1, stockUnit)} ou mais para sair da zona critica.`;
+    return `Nivel critico: ${formatarQuantidadeComUnidade(quantidade, unidadeEstoque)} em estoque. Reponha ${formatarQuantidadeComUnidade(quantidadeFaltante || 1, unidadeEstoque)} ou mais para sair da zona critica.`;
   }
 
-  return `Estoque baixo: ${formatQuantityWithUnit(quantity, stockUnit)} disponiveis. O minimo ideal configurado e ${formatQuantityWithUnit(minimum, stockUnit)}.`;
+  return `Estoque baixo: ${formatarQuantidadeComUnidade(quantidade, unidadeEstoque)} disponiveis. O minimo ideal configurado e ${formatarQuantidadeComUnidade(minimoIdeal, unidadeEstoque)}.`;
 }
 
-function buildStockNotice(product, type) {
-  const status = getStatus(product.quantity, product.min_quantity);
-  const actionText = type === "entrada" ? "Entrada registrada." : "Saida registrada.";
+function montarAvisoEstoque(produto, tipoMovimentacao) {
+  const status = obterStatus(produto.quantity, produto.min_quantity);
+  const textoAcao = tipoMovimentacao === "entrada" ? "Entrada registrada." : "Saida registrada.";
 
   if (status.key === "critical") {
-    return `${actionText} ${product.name} ficou em nivel critico.`;
+    return `${textoAcao} ${produto.name} ficou em nivel critico.`;
   }
 
   if (status.key === "low") {
-    return `${actionText} ${product.name} esta com estoque baixo.`;
+    return `${textoAcao} ${produto.name} esta com estoque baixo.`;
   }
 
-  return `${actionText} ${product.name} segue com estoque OK.`;
+  return `${textoAcao} ${produto.name} segue com estoque OK.`;
 }
 
-function getNoticeTone(product) {
-  const status = getStatus(product.quantity, product.min_quantity);
+function obterTomAviso(produto) {
+  const status = obterStatus(produto.quantity, produto.min_quantity);
 
   if (status.key === "critical") {
     return "error";
@@ -790,100 +849,104 @@ function getNoticeTone(product) {
   return "success";
 }
 
-function showNotice(message, tone = "info", keepVisible = false) {
-  window.clearTimeout(showNotice.timeoutId);
-  els.noticeBar.hidden = false;
-  els.noticeBar.textContent = message;
-  els.noticeBar.classList.remove("is-error", "is-success", "is-warning");
+function mostrarAviso(mensagem, tom = "info", manterVisivel = false) {
+  window.clearTimeout(mostrarAviso.timeoutId);
+  elementos.barraAviso.hidden = false;
+  elementos.barraAviso.textContent = mensagem;
+  elementos.barraAviso.classList.remove("is-error", "is-success", "is-warning");
+  elementos.barraAviso.setAttribute("role", tom === "error" ? "alert" : "status");
+  elementos.barraAviso.setAttribute("aria-live", tom === "error" ? "assertive" : "polite");
 
-  if (tone === "error") {
-    els.noticeBar.classList.add("is-error");
+  if (tom === "error") {
+    elementos.barraAviso.classList.add("is-error");
   }
 
-  if (tone === "success") {
-    els.noticeBar.classList.add("is-success");
+  if (tom === "success") {
+    elementos.barraAviso.classList.add("is-success");
   }
 
-  if (tone === "warning") {
-    els.noticeBar.classList.add("is-warning");
+  if (tom === "warning") {
+    elementos.barraAviso.classList.add("is-warning");
   }
 
-  if (keepVisible) {
+  if (manterVisivel) {
     return;
   }
 
-  showNotice.timeoutId = window.setTimeout(clearNotice, 2400);
+  mostrarAviso.timeoutId = window.setTimeout(limparAviso, 2400);
 }
 
-function clearNotice() {
-  els.noticeBar.hidden = true;
-  els.noticeBar.textContent = "";
-  els.noticeBar.classList.remove("is-error", "is-success", "is-warning");
+function limparAviso() {
+  elementos.barraAviso.hidden = true;
+  elementos.barraAviso.textContent = "";
+  elementos.barraAviso.classList.remove("is-error", "is-success", "is-warning");
 }
 
-function showAuthNotice(message, tone = "info", keepVisible = false) {
-  window.clearTimeout(showAuthNotice.timeoutId);
-  els.authNotice.hidden = false;
-  els.authNotice.textContent = message;
-  els.authNotice.classList.remove("is-error", "is-success", "is-warning");
+function mostrarAvisoLogin(mensagem, tom = "info", manterVisivel = false) {
+  window.clearTimeout(mostrarAvisoLogin.timeoutId);
+  elementos.avisoLogin.hidden = false;
+  elementos.avisoLogin.textContent = mensagem;
+  elementos.avisoLogin.classList.remove("is-error", "is-success", "is-warning");
+  elementos.avisoLogin.setAttribute("role", tom === "error" ? "alert" : "status");
+  elementos.avisoLogin.setAttribute("aria-live", tom === "error" ? "assertive" : "polite");
 
-  if (tone === "error") {
-    els.authNotice.classList.add("is-error");
+  if (tom === "error") {
+    elementos.avisoLogin.classList.add("is-error");
   }
 
-  if (tone === "success") {
-    els.authNotice.classList.add("is-success");
+  if (tom === "success") {
+    elementos.avisoLogin.classList.add("is-success");
   }
 
-  if (tone === "warning") {
-    els.authNotice.classList.add("is-warning");
+  if (tom === "warning") {
+    elementos.avisoLogin.classList.add("is-warning");
   }
 
-  if (keepVisible) {
+  if (manterVisivel) {
     return;
   }
 
-  showAuthNotice.timeoutId = window.setTimeout(clearAuthNotice, 3000);
+  mostrarAvisoLogin.timeoutId = window.setTimeout(limparAvisoLogin, 3000);
 }
 
-function clearAuthNotice() {
-  els.authNotice.hidden = true;
-  els.authNotice.textContent = "";
-  els.authNotice.classList.remove("is-error", "is-success", "is-warning");
+function limparAvisoLogin() {
+  elementos.avisoLogin.hidden = true;
+  elementos.avisoLogin.textContent = "";
+  elementos.avisoLogin.classList.remove("is-error", "is-success", "is-warning");
 }
 
-function getErrorMessage(error, fallbackMessage) {
+function obterMensagemErro(error, mensagemPadrao) {
   if (!error) {
-    return fallbackMessage;
+    return mensagemPadrao;
   }
 
-  const code = String(error.code || "");
-  const message = String(error.message || "").trim();
+  const codigo = String(error.code || "");
+  const mensagem = String(error.message || "").trim();
 
-  if (code === "23505" || message.toLowerCase().includes("duplicate key")) {
+  if (codigo === "23505" || mensagem.toLowerCase().includes("duplicate key")) {
     return "Ja existe um item com esse nome no estoque.";
   }
 
-  if (message.includes("Estoque insuficiente")) {
+  if (mensagem.includes("Estoque insuficiente")) {
     return "Estoque insuficiente para registrar a saida.";
   }
 
-  if (message.includes("Produto nao encontrado")) {
+  if (mensagem.includes("Produto nao encontrado")) {
     return "Produto nao encontrado.";
   }
 
-  if (message.includes("Operacao nao autorizada")) {
+  if (mensagem.includes("Operacao nao autorizada")) {
     return "Voce nao tem permissao para realizar esta operacao.";
   }
 
-  if (message.includes("Invalid login credentials")) {
+  if (mensagem.includes("Invalid login credentials")) {
     return "Email ou senha invalidos.";
   }
 
-  return fallbackMessage;
+  return mensagemPadrao;
 }
 
-function capitalize(value) {
+function capitalizar(value) {
   if (!value) {
     return "";
   }
@@ -891,55 +954,55 @@ function capitalize(value) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-function getProductTypeLabel(productType) {
-  return PRODUCT_TYPE_LABELS[productType] || "Item";
+function obterRotuloTipoProduto(tipoProduto) {
+  return ROTULOS_TIPO_PRODUTO[tipoProduto] || "Item";
 }
 
-function getUnitShortLabel(stockUnit) {
-  return STOCK_UNIT_LABELS[stockUnit]?.short || "un";
+function obterRotuloCurtoUnidade(unidadeEstoque) {
+  return ROTULOS_UNIDADE_ESTOQUE[unidadeEstoque]?.short || "un";
 }
 
-function getUnitLabel(stockUnit, quantity = 1) {
-  const unitMeta = STOCK_UNIT_LABELS[stockUnit] || STOCK_UNIT_LABELS.un;
+function obterRotuloUnidade(unidadeEstoque, quantidade = 1) {
+  const metaUnidade = ROTULOS_UNIDADE_ESTOQUE[unidadeEstoque] || ROTULOS_UNIDADE_ESTOQUE.un;
 
-  return quantity === 1 ? unitMeta.singular : unitMeta.plural;
+  return quantidade === 1 ? metaUnidade.singular : metaUnidade.plural;
 }
 
-function formatQuantityWithUnit(quantity, stockUnit) {
-  const safeQuantity = Number(quantity) || 0;
+function formatarQuantidadeComUnidade(quantidade, unidadeEstoque) {
+  const quantidadeSegura = Number(quantidade) || 0;
 
-  return `${safeQuantity} ${getUnitLabel(stockUnit, safeQuantity)}`;
+  return `${quantidadeSegura} ${obterRotuloUnidade(unidadeEstoque, quantidadeSegura)}`;
 }
 
-function buildProductsRuntimeSummary(visibleCount, totalCount) {
-  const lastSync = formatSyncTime(state.productsUpdatedAt);
+function montarResumoAtualizacaoProdutos(quantidadeVisivel, quantidadeTotal) {
+  const ultimaSincronizacao = formatarHorarioSincronizacao(estado.produtosAtualizadosEm);
 
-  if (!state.session) {
+  if (!estado.sessao) {
     return "Sem sessao ativa.";
   }
 
-  if (totalCount === 0) {
-    return `Nenhum item carregado${lastSync ? ` · ${lastSync}` : ""}`;
+  if (quantidadeTotal === 0) {
+    return `Nenhum item carregado${ultimaSincronizacao ? ` | ${ultimaSincronizacao}` : ""}`;
   }
 
-  if (visibleCount !== totalCount) {
-    return `${visibleCount} de ${totalCount} itens visiveis · ${lastSync}`;
+  if (quantidadeVisivel !== quantidadeTotal) {
+    return `${quantidadeVisivel} de ${quantidadeTotal} itens visiveis | ${ultimaSincronizacao}`;
   }
 
-  return `${totalCount} itens carregados · ${lastSync}`;
+  return `${quantidadeTotal} itens carregados | ${ultimaSincronizacao}`;
 }
 
-function buildHistoryRuntimeSummary(totalCount) {
-  const lastSync = formatSyncTime(state.historyUpdatedAt);
+function montarResumoAtualizacaoHistorico(quantidadeTotal) {
+  const ultimaSincronizacao = formatarHorarioSincronizacao(estado.historicoAtualizadoEm);
 
-  if (!state.session) {
+  if (!estado.sessao) {
     return "Sem sessao ativa.";
   }
 
-  return `${totalCount} registros recentes · ${lastSync}`;
+  return `${quantidadeTotal} registros recentes | ${ultimaSincronizacao}`;
 }
 
-function formatSyncTime(value) {
+function formatarHorarioSincronizacao(value) {
   if (!value) {
     return "aguardando sincronizacao";
   }
@@ -950,70 +1013,70 @@ function formatSyncTime(value) {
   }).format(new Date(value))}`;
 }
 
-function getStockProgressPercentage(quantity, minQuantity) {
-  const safeQuantity = Math.max(0, Number(quantity) || 0);
-  const safeMin = Math.max(1, Number(minQuantity) || 1);
+function obterPercentualProgressoEstoque(quantidade, quantidadeMinima) {
+  const quantidadeSegura = Math.max(0, Number(quantidade) || 0);
+  const minimoSeguro = Math.max(1, Number(quantidadeMinima) || 1);
 
-  return Math.min(100, Math.round((safeQuantity / safeMin) * 100));
+  return Math.min(100, Math.round((quantidadeSegura / minimoSeguro) * 100));
 }
 
-function buildProductStockNote(product, status) {
-  const quantity = Number(product.quantity) || 0;
-  const minimum = Math.max(1, Number(product.min_quantity) || 1);
-  const stockUnit = product.stock_unit || "un";
-  const missing = Math.max(0, minimum - quantity);
-  const surplus = Math.max(0, quantity - minimum);
+function montarObservacaoEstoqueProduto(produto, status) {
+  const quantidade = Number(produto.quantity) || 0;
+  const minimoIdeal = Math.max(1, Number(produto.min_quantity) || 1);
+  const unidadeEstoque = produto.stock_unit || "un";
+  const quantidadeFaltante = Math.max(0, minimoIdeal - quantidade);
+  const excedente = Math.max(0, quantidade - minimoIdeal);
 
   if (status.key === "critical") {
-    if (quantity === 0) {
-      return `Item zerado. Reponha ${formatQuantityWithUnit(minimum, stockUnit)} para normalizar o estoque.`;
+    if (quantidade === 0) {
+      return `Item zerado. Reponha ${formatarQuantidadeComUnidade(minimoIdeal, unidadeEstoque)} para normalizar o estoque.`;
     }
 
-    return `Faltam ${formatQuantityWithUnit(missing, stockUnit)} para sair do nivel critico.`;
+    return `Faltam ${formatarQuantidadeComUnidade(quantidadeFaltante, unidadeEstoque)} para sair do nivel critico.`;
   }
 
   if (status.key === "low") {
-    return `Faltam ${formatQuantityWithUnit(missing, stockUnit)} para atingir o minimo ideal.`;
+    return `Faltam ${formatarQuantidadeComUnidade(quantidadeFaltante, unidadeEstoque)} para atingir o minimo ideal.`;
   }
 
-  if (surplus === 0) {
+  if (excedente === 0) {
     return "Estoque exatamente no minimo ideal configurado.";
   }
 
-  return `${formatQuantityWithUnit(surplus, stockUnit)} acima do minimo ideal.`;
+  return `${formatarQuantidadeComUnidade(excedente, unidadeEstoque)} acima do minimo ideal.`;
 }
 
-function buildHistoryDetail(movement) {
-  const productType = getProductTypeLabel(movement.products?.product_type);
-  const unitShort = getUnitShortLabel(movement.products?.stock_unit);
-  const reason = getMovementReasonLabel(movement.reason);
+function montarDetalheHistorico(movimentacao) {
+  const tipoProduto = obterRotuloTipoProduto(movimentacao.products?.product_type);
+  const unidadeCurta = obterRotuloCurtoUnidade(movimentacao.products?.stock_unit);
+  const motivo = obterRotuloMotivoMovimentacao(movimentacao.reason);
 
-  return `${productType} | ${unitShort} | ${reason}`;
+  return `${tipoProduto} | ${unidadeCurta} | ${motivo}`;
 }
 
-function getHistoryFlow(movement) {
-  const stockUnit = movement.products?.stock_unit || "un";
-  const previousQuantity =
-    movement.previous_quantity !== null && movement.previous_quantity !== undefined
-      ? Number(movement.previous_quantity)
+function obterFluxoHistorico(movimentacao) {
+  const unidadeEstoque = movimentacao.products?.stock_unit || "un";
+  const quantidadeAnterior =
+    movimentacao.previous_quantity !== null && movimentacao.previous_quantity !== undefined
+      ? Number(movimentacao.previous_quantity)
       : null;
-  const resultQuantity =
-    movement.result_quantity !== null && movement.result_quantity !== undefined
-      ? Number(movement.result_quantity)
+  const quantidadeResultante =
+    movimentacao.result_quantity !== null && movimentacao.result_quantity !== undefined
+      ? Number(movimentacao.result_quantity)
       : null;
 
-  if (previousQuantity === null || resultQuantity === null) {
+  if (quantidadeAnterior === null || quantidadeResultante === null) {
     return null;
   }
 
   return {
-    before: formatQuantityWithUnit(previousQuantity, stockUnit),
-    after: formatQuantityWithUnit(resultQuantity, stockUnit),
+    before: formatarQuantidadeComUnidade(quantidadeAnterior, unidadeEstoque),
+    after: formatarQuantidadeComUnidade(quantidadeResultante, unidadeEstoque),
   };
 }
 
-function getMovementReasonLabel(reason) {
-  const reasonLabels = {
+function obterRotuloMotivoMovimentacao(motivo) {
+  const rotulosMotivo = {
     cadastro_inicial: "Cadastro inicial",
     entrada_manual: "Entrada manual",
     saida_manual: "Saida manual",
@@ -1023,137 +1086,154 @@ function getMovementReasonLabel(reason) {
     perda: "Perda",
   };
 
-  return reasonLabels[reason] || "Movimentacao";
+  return rotulosMotivo[motivo] || "Movimentacao";
 }
 
-function syncTypeFilterState() {
-  els.productTypeFilters.querySelectorAll("[data-type-filter]").forEach((button) => {
-    button.classList.toggle("is-active", button.dataset.typeFilter === state.productTypeFilter);
+function sincronizarEstadoFiltroTipo() {
+  elementos.filtrosTipoProduto.querySelectorAll("[data-type-filter]").forEach((botao) => {
+    const filtroAtivo = botao.dataset.typeFilter === estado.filtroTipoProduto;
+    botao.classList.toggle("is-active", filtroAtivo);
+    botao.setAttribute("aria-pressed", String(filtroAtivo));
   });
 }
 
-function getVisibleProducts() {
-  const searchTerm = state.productSearch;
+function obterQuantidadeAjuste(entrada) {
+  if (!entrada) {
+    return 1;
+  }
 
-  return state.products.filter((product) => {
-    const matchesType =
-      state.productTypeFilter === "all" || product.product_type === state.productTypeFilter;
-    const matchesSearch =
-      !searchTerm || String(product.name || "").toLowerCase().includes(searchTerm);
+  const valorInformado = Number.parseInt(String(entrada.value || "").trim(), 10);
 
-    return matchesType && matchesSearch;
+  if (!Number.isInteger(valorInformado) || valorInformado < 1) {
+    return null;
+  }
+
+  return valorInformado;
+}
+
+function obterProdutosVisiveis() {
+  const termoBusca = estado.buscaProduto;
+
+  return estado.produtos.filter((produto) => {
+    const correspondeTipo =
+      estado.filtroTipoProduto === "all" || produto.product_type === estado.filtroTipoProduto;
+    const correspondeBusca =
+      !termoBusca || String(produto.name || "").toLowerCase().includes(termoBusca);
+
+    return correspondeTipo && correspondeBusca;
   });
 }
 
-function buildProductsEmptyStateMessage() {
-  if (!state.session) {
+function montarMensagemEstadoVazioProdutos() {
+  if (!estado.sessao) {
     return "Entre no sistema para carregar os produtos cadastrados.";
   }
 
-  if (state.products.length === 0) {
-    return "Nenhum produto encontrado. Cadastre itens na tabela products para iniciar o controle.";
+  if (estado.produtos.length === 0) {
+    return "Nenhum produto encontrado. Cadastre itens para iniciar o controle.";
   }
 
   return "Nenhum item corresponde aos filtros atuais.";
 }
 
-function sortProducts(products) {
-  return [...products].sort((left, right) => {
-    const typeDiff =
-      (PRODUCT_TYPE_ORDER[left.product_type] ?? 99) - (PRODUCT_TYPE_ORDER[right.product_type] ?? 99);
+function ordenarProdutos(produtos) {
+  return [...produtos].sort((esquerda, direita) => {
+    const diferencaTipo =
+      (ORDEM_TIPO_PRODUTO[esquerda.product_type] ?? 99) - (ORDEM_TIPO_PRODUTO[direita.product_type] ?? 99);
 
-    if (typeDiff !== 0) {
-      return typeDiff;
+    if (diferencaTipo !== 0) {
+      return diferencaTipo;
     }
 
-    return String(left.name || "").localeCompare(String(right.name || ""), "pt-BR");
+    return String(esquerda.name || "").localeCompare(String(direita.name || ""), "pt-BR");
   });
 }
 
-async function refreshActiveData(silent = false) {
-  if (!supabaseClient || !state.session) {
+async function atualizarDadosAtivos(silent = false) {
+  if (!clienteSupabase || !estado.sessao) {
     return;
   }
 
-  await fetchProducts(silent);
+  await buscarProdutos(silent);
 
-  if (state.view === "history") {
-    await fetchHistory(silent);
+  if (estado.visualizacao === "historico") {
+    await buscarHistorico(silent);
   }
 }
 
-function syncAutoRefresh() {
-  if (state.autoRefreshTimerId) {
-    window.clearInterval(state.autoRefreshTimerId);
-    state.autoRefreshTimerId = null;
+function sincronizarAtualizacaoAutomatica() {
+  if (estado.idTemporizadorAtualizacao) {
+    window.clearInterval(estado.idTemporizadorAtualizacao);
+    estado.idTemporizadorAtualizacao = null;
   }
 
-  if (!state.session) {
+  if (!estado.sessao) {
     return;
   }
 
-  state.autoRefreshTimerId = window.setInterval(() => {
+  estado.idTemporizadorAtualizacao = window.setInterval(() => {
     if (document.hidden) {
       return;
     }
 
-    refreshActiveData(true);
-  }, AUTO_REFRESH_INTERVAL_MS);
+    atualizarDadosAtivos(true);
+  }, INTERVALO_ATUALIZACAO_AUTOMATICA_MS);
 }
 
-function ensureWriteAccess() {
-  if (state.session) {
+function garantirAcessoEscrita() {
+  if (estado.sessao) {
     return true;
   }
 
-  showAuthNotice("Faca login para editar o estoque.", "warning", true);
+  mostrarAvisoLogin("Faca login para editar o estoque.", "warning", true);
   return false;
 }
 
-function setAuthFormDisabled(disabled) {
-  Array.from(els.authForm.elements).forEach((element) => {
-    element.disabled = disabled;
+function definirFormularioLoginDesabilitado(desabilitado) {
+  Array.from(elementos.formLogin.elements).forEach((elemento) => {
+    elemento.disabled = desabilitado;
   });
 
-  els.authSubmitButton.textContent = disabled ? "Entrando..." : "Entrar no controle";
+  elementos.botaoEntrar.textContent = desabilitado ? "Entrando..." : "Entrar no controle";
 }
 
-function syncCreateFormState() {
-  const disabled = state.isCreating || !state.session;
+function sincronizarEstadoFormularioCriacao() {
+  const desabilitado = estado.estaCriando || !estado.sessao;
 
-  Array.from(els.createProductForm.elements).forEach((element) => {
-    element.disabled = disabled;
+  Array.from(elementos.formNovoProduto.elements).forEach((elemento) => {
+    elemento.disabled = desabilitado;
   });
 
-  els.createProductButton.textContent = state.isCreating ? "Salvando..." : "Adicionar item";
+  elementos.botaoNovoProduto.textContent = estado.estaCriando ? "Salvando..." : "Adicionar item";
 }
 
-function resetCreateForm() {
-  els.createProductForm.reset();
-  els.createProductForm.elements.namedItem("product_type").value = "ingrediente";
-  els.createProductForm.elements.namedItem("stock_unit").value = "un";
-  els.createProductForm.elements.namedItem("quantity").value = "0";
-  els.createProductForm.elements.namedItem("min_quantity").value = "5";
+function resetarFormularioCriacao() {
+  elementos.formNovoProduto.reset();
+  elementos.formNovoProduto.elements.namedItem("product_type").value = "ingrediente";
+  elementos.formNovoProduto.elements.namedItem("stock_unit").value = "un";
+  elementos.formNovoProduto.elements.namedItem("quantity").value = "0";
+  elementos.formNovoProduto.elements.namedItem("min_quantity").value = "5";
 }
 
-function resetState() {
-  state.products = [];
-  state.history = [];
-  state.productSearch = "";
-  state.productTypeFilter = "all";
-  state.pendingIds.clear();
-  state.isCreating = false;
-  state.productsUpdatedAt = null;
-  state.historyUpdatedAt = null;
-  els.productSearch.value = "";
-  if (els.productsRuntimeSummary) {
-    els.productsRuntimeSummary.textContent = "";
+function resetarEstado() {
+  estado.produtos = [];
+  estado.historico = [];
+  estado.buscaProduto = "";
+  estado.filtroTipoProduto = "all";
+  estado.idsPendentes.clear();
+  estado.estaCriando = false;
+  estado.produtosAtualizadosEm = null;
+  estado.historicoAtualizadoEm = null;
+  elementos.buscaProduto.value = "";
+  if (elementos.resumoAtualizacaoProdutos) {
+    elementos.resumoAtualizacaoProdutos.textContent = "";
   }
-  if (els.historyRuntimeSummary) {
-    els.historyRuntimeSummary.textContent = "";
+  if (elementos.resumoAtualizacaoHistorico) {
+    elementos.resumoAtualizacaoHistorico.textContent = "";
   }
-  syncTypeFilterState();
-  syncCreateFormState();
-  renderProducts();
-  renderHistory();
+  sincronizarEstadoFiltroTipo();
+  sincronizarEstadoFormularioCriacao();
+  renderizarProdutos();
+  renderizarHistorico();
 }
+
